@@ -174,12 +174,11 @@ function init() {
 	mesh.position.set(0,0,0);
 	scene.add(mesh);
 
-    setUpParticles();
 	
 	
 }
 
-function setUpParticles() {
+function createParticleLine(origin, dest) {
     // create the particle variables
         particles = new THREE.Geometry(),
         pMaterial = new THREE.ParticleBasicMaterial({
@@ -192,8 +191,14 @@ function setUpParticles() {
             transparent: true
         });
     
-    var origin = testline.geometry.vertices[0];
-    var dest = testline.geometry.vertices[1];
+    //var origin = testline.geometry.vertices[0];
+    //var dest = testline.geometry.vertices[1];
+    
+    var origin = new THREE.Vector3(origin.x, origin.y, origin.z);
+    var dest = new THREE.Vector3(dest.x, dest.y, dest.z);
+
+
+    console.log(origin, dest);
 
     var vector = dest.clone().sub(origin.clone());
     
@@ -206,36 +211,39 @@ function setUpParticles() {
         var pX = origin.x + vector.x * p / particleCount;
         var pY = origin.y + vector.y * p / particleCount;
         var pZ = origin.z + vector.z * p / particleCount;
-        var particle = new THREE.Vertex(
-            new THREE.Vector3(pX, pY, pZ)
-          );
+        var particle = new THREE.Vector3(pX, pY, pZ)
     
       // add it to the geometry
       particles.vertices.push(particle);
     }
 
-    particles.verticesNeedUpdate = true;
-    particles.elementsNeedUpdate = true;
-    particles.morphTargetsNeedUpdate = true;
-    particles.uvsNeedUpdate = true;
-    particles.normalsNeedUpdate = true;
-    particles.colorsNeedUpdate = true;
-    particles.tangentsNeedUpdate = true;
     
     // create the particle system
     var particleSystem = new THREE.ParticleSystem(
         particles,
         pMaterial);
+    particleSystem.dynamic = true;
+    particleSystem.sortParticles = true;
+    particleSystem.geometry.verticesNeedUpdate = true;
+    particleSystem.geometry.elementsNeedUpdate = true;
+    particleSystem.geometry.morphTargetsNeedUpdate = true;
+    particleSystem.geometry.uvsNeedUpdate = true;
+    particleSystem.geometry.normalsNeedUpdate = true;
+    particleSystem.geometry.colorsNeedUpdate = true;
+    particleSystem.geometry.tangentsNeedUpdate = true;
     
     // add it to the scene
     
-    particles._vector = vector;
+    particles.vector = vector;
+    particles.origin = origin;
     particles.count = particleCount;
 
     particleSystem.geometry.__dirtyVertices = true;
     scene.add(particleSystem);
+    particles.system = particleSystem;
     particleLines.push(particles);
 
+    return particles;
 
 //    var discTexture = THREE.ImageUtils.loadTexture( 'images/particle.png' );
 //	
@@ -326,6 +334,7 @@ function createLines(nodes) {
             line.name = "line" + i;
             line.parentNode = nodes[i];
             line.childNode = child;
+            line.particles = createParticleLine(line.childNode.position, line.parentNode.position);
             scene.add(line);
             lines.push(line);
         }
@@ -358,7 +367,7 @@ function createNodes(data) {
     var i;
 
     for (i = 0; i < data.length; i++) {
-		data[i].object = makeNode(data[i].name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position } );
+		data[i].object = makeNode(data[i].name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position , node: data[i]} );
 		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
 		//scene.add( data[i].sprite );
         //targetList.push(data[i].sprite);
@@ -392,6 +401,7 @@ function makeNode( message, parameters) {
 	mesh = new THREE.Mesh( geometry, material );
     mesh.position = parameters.position;
     mesh.name = message;
+    mesh.node = parameters.node;
 
     mesh.scale.x = canvas.width * scale;
     mesh.scale.y = canvas.height * scale;
@@ -577,8 +587,55 @@ function onDocumentMouseMove( event ) {
 	if ( SELECTED ) {
 
 		var intersects = raycaster.intersectObject( plane );
-        console.log(SELECTED);
+        //console.log(SELECTED);
 		SELECTED.position = intersects[ 0 ].point.sub( offset ) ;
+
+        // find lines attached to this node, and recreate the respective particle systems
+
+        //console.log(SELECTED.node);
+
+        var i;
+        for (i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var parent = line.parentNode;
+            var child = line.childNode;
+
+            var name = line.name;
+            var particles = line.particles;
+            particles.origin = new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z);
+            var dest = new THREE.Vector3(parent.object.position.x, parent.object.position.y, parent.object.position.z);
+            particles.vector = dest.clone().sub(particles.origin.clone());
+
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(line.parentNode.object.position);
+            geometry.vertices.push(line.childNode.object.position);
+            
+            var l = scene.getObjectByName(lines[i].name);
+            scene.remove(l);
+            
+            lines[i] = new THREE.Line(geometry, lineMaterial);
+            lines[i].parentNode = parent;
+            lines[i].childNode = child;
+            lines[i].name = name;
+            lines[i].particles = particles;
+
+            if (SELECTED.name == parent.object.name || SELECTED.name == child.object.name) {
+                //recreate particle system
+                console.log(parent.object.name, child.object.name, SELECTED.name, line);
+
+                var index = particleLines.indexOf(line.particles);
+                if (index > -1) {
+                    particleLines.splice(index, 1);
+                }
+                scene.remove(line.particles.system);
+                //scene.remove(line.particles.system);
+                lines[i].particles = createParticleLine(line.childNode.object.position, line.parentNode.object.position);
+
+            }
+            scene.add(lines[i]);
+
+        }
+
 		return;
 
 	}
@@ -689,43 +746,47 @@ function update() {
 
     //console.log(testline.geometry.vertices[0].x);
 
-    for (i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        var parent = line.parentNode;
-        var child = line.childNode;
-        var name = line.name;
-        
-        var geometry = new THREE.Geometry();
-        geometry.vertices.push(line.parentNode.object.position);
-        geometry.vertices.push(line.childNode.object.position);
-        
-        var l = scene.getObjectByName(lines[i].name);
-        scene.remove(l);
-        
-        lines[i] = new THREE.Line(geometry, lineMaterial);
-        lines[i].parentNode = parent;
-        lines[i].childNode = child;
-        lines[i].name = name;
-        scene.add(line);
-        
-    }
+    //for (i = 0; i < lines.length; i++) {
+    //    var line = lines[i];
+    //    var parent = line.parentNode;
+    //    var child = line.childNode;
+    //    var name = line.name;
+    //    //var particles = line.particles;
+    //    //particles.origin = new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z);
+    //    //var dest = new THREE.Vector3(parent.object.position.x, parent.object.position.y, parent.object.position.z);
+    //    //particles.vector = dest.clone().sub(particles.origin.clone());
+
+    //    var geometry = new THREE.Geometry();
+    //    geometry.vertices.push(line.parentNode.object.position);
+    //    geometry.vertices.push(line.childNode.object.position);
+    //    
+    //    var l = scene.getObjectByName(lines[i].name);
+    //    scene.remove(l);
+    //    
+    //    lines[i] = new THREE.Line(geometry, lineMaterial);
+    //    lines[i].parentNode = parent;
+    //    lines[i].childNode = child;
+    //    lines[i].name = name;
+    //    //lines[i].particles = particles;
+    //    scene.add(line);
+    //    
+    //}
 
     for (i = 0; i < particleLines.length; i++) {
         var particles = particleLines[i];
         for (j = 0; j < particles.vertices.length; j++) {
             var particle = particles.vertices[j];
-            var s = 1;
+            var s = 0.01;//001;
             
-            //var v = new THREE.Vector3(0,10,0);
+            var v = particles.vertices[j].clone().sub(particles.origin.clone());
 
-            //v.x = particle.x + particles._vector.x * s;
-            //v.y = particle.y + particles._vector.y * s;
-            //v.z = particle.z + particles._vector.z * s;
-           
-            //console.log(v);
-            particles.vertices[j].x += 1;
-            
-        
+            if (v.length() > particles.vector.length()) {
+                particles.vertices[j] = particles.origin.clone();
+            } else {
+                particles.vertices[j].x += particles.vector.x * s;
+                particles.vertices[j].y += particles.vector.y * s;
+                particles.vertices[j].z += particles.vector.z * s;
+            }
         }
     }
 
