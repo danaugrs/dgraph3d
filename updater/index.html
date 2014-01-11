@@ -68,7 +68,8 @@
 
 	<script type = "text/javascript">
 	var data;
-	function initialize() {
+	function initialize(newData) {
+		data = newData;
 		populateData(data);
 		addButtonFx();
 	}
@@ -77,7 +78,7 @@
 		var colorsOfTheRainbow = ["#16a085", "#8e44ad", "#d35400", "#2a83be", "#2c3e50", "#27ae60", "#c0392b"]
 		var main = document.getElementById("nodes");
 		main.innerHTML = "";
-
+		console.log(data);
 		for (var i = 0; i < data.length; i++) {
 			var submain = document.createElement("div");
 			submain.setAttribute("class","tiles");
@@ -159,9 +160,17 @@
 	});
 
 	socket.addEventListener("message", function(event) {
-		console.log("WebSocket data incoming:" + event.data);
-		changedata(event.data);
-
+		console.log("WebSocket data incoming: " + event.data);
+		console.log(event.data.split(': ').length != 2);
+		// if (event.data.split(': ') == event.data)
+		// console.log(JSON.parse(event.data));
+		if (event.data.split(': ').length == 2) {
+			changedata(event.data);
+			initialize(data);
+		}
+		else {
+			initialize(JSON.parse(event.data));
+		}
 	});	
 
 	socket.addEventListener("error", function(event) {
@@ -191,7 +200,8 @@
 		}
 	}
 	if (!appearFlag) {
-		console.log("No change in status for " + data[i].name)
+		console.log("No change in status for " + data[i].name);
+
 	}
 }
 	</script>

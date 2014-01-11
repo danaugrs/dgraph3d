@@ -112,11 +112,11 @@ wsServer = new WebSocketServer({
 	autoAcceptConnections: false
 });
 
+var allConn = [];
+
 wsServer.on('request', function(request) {
 	var conn = request.accept('echo-protocol', request.origin);
 	log("Connection accepted: " + request.origin);
-
-	var allConn = [];
 	allConn.push(conn);
 	allConn.push(request.origin);
 
