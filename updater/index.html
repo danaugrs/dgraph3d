@@ -20,30 +20,17 @@
 	}
 	</style>
 
-	<script type = "text/javascript" src = "js/jquery-1.10.2.min.js"></script>
-
 	<script type = "text/javascript">
-
-	
-
 	function initialize(data) {
-		// modify data to point to incoming JSON file
-		// console.log('adsf');
-		// $.getJSON('data.json', function(data) {
-			populateData(JSON.parse(data));
-			addButtonFx();
-		// });
+		populateData(JSON.parse(data));
+		addButtonFx();
 	}
 
-
-			// $("#"+data[i].name+"OK").click(function(){
-    // alert('clicked!');
-// });
 	function populateData(data) {
-		console.log(data);
+		var main = document.getElementById("nodes");
+		main.innerHTML = "";
+
 		for (var i = 0; i < data.length; i++) {
-			console.log(data[i]);
-			var main = document.getElementById("nodes");
 			var submain = document.createElement("div");
 			submain.setAttribute("class","tiles");
 
@@ -129,9 +116,14 @@
 <body>
 
 <form>
-	<input type = "button" onClick = "startWebSocket()" value = "Submit!">
 	<br/>
 	<center>
 	<div id = "nodes"></div>
+	<script>
+		startWebSocket();
+	</script>
 	</center>
 </form>
+
+</body>
+</html>

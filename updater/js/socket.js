@@ -147,27 +147,3 @@ function changedata(term) {
 	}
 
 }
-// function main() {
-// 	log("Starting webserver...");
-// 	http.createServer(function(request, response) {
-// 	  response.writeHead(200, {"Content-Type": "text/plain"});
-// 	  response.write("Hello World");
-// 	  response.end();
-// 	}).listen(PORT, function() {
-// 		log("Listening on port: " + PORT);
-// 	});
-
-// 	var socket = new websocket.server({
-// 		htpServer: web,
-// 		autoAcceptConnections: true
-// 	});
-
-// 	socket.on('request', function(request) {
-// 		log('New websocket request!');
-		
-// 		wsCONN = request.accept('echo-protocol', request.origin);
-// 		console.log((new Date()) + ' Connection accepted.');
-// 	});
-// }
-
-// main();
