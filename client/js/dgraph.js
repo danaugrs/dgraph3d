@@ -47,7 +47,8 @@ var topBar = function() {
         console.log("Saving changes...");
         console.log(SELECTED);
         nodeSelected.name = this.name;
-        var msgtex = makeMsgTexture( this.name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
+        var text = this.name + "\n" + "Status: " + nodeSelected.node.status;
+        var msgtex = makeMsgTexture( text, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
         nodeSelected.material.map = msgtex.texture;
         nodeSelected.material.map.needsUpdate = true;// = tex;
         nodeSelected.scale.x = msgtex.canvas.width * 0.3;
@@ -383,7 +384,9 @@ function createNodes(data) {
     var i;
 
     for (i = 0; i < data.length; i++) {
-		data[i].object = makeNode(data[i].name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position , node: data[i]} );
+        console.log(data[i]);
+        var text = data[i].name + "\n" + "Status: " + data[i].status;
+		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position , node: data[i]} );
 		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
 		//scene.add( data[i].sprite );
         //targetList.push(data[i].sprite);
@@ -416,7 +419,7 @@ function makeNode( message, parameters) {
 
 	mesh = new THREE.Mesh( geometry, material );
     mesh.position = parameters.position;
-    mesh.name = message;
+    mesh.name = parameters.node.name;
     mesh.node = parameters.node;
 
     mesh.scale.x = canvas.width * scale;
@@ -542,48 +545,6 @@ function roundRect(ctx, x, y, w, h, r)
 	ctx.stroke();   
 }
 
-//function onDocumentMouseDown( event ) {
-//	// the following line would stop any other event handler from firing
-//	// (such as the mouse's TrackballControls)
-//	event.preventDefault();
-//	
-//	console.log("Click.");
-//	
-//	// update the mouse variable
-//	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-//	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-//	
-//	// find intersections
-//
-//	// create a Ray with origin at the mouse position
-//	//   and direction into the scene (camera direction)
-//	var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
-//	projector.unprojectVector( vector, camera );
-//	var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
-//
-//	// create an array containing all objects in the scene with which the ray intersects
-//	var intersects = ray.intersectObjects( nodes );
-//	
-//	// if there is one (or more) intersections
-//	if ( intersects.length > 0 ) {
-//        if (lastNode) {
-//            lastNode.material.opacity = 0.7;
-//        }
-//        selectedNode = intersects[0].object;		
-//        //console.log("Hit @ " + toString( intersects[0].point ) );
-//        //console.log(intersects[0]);
-//        selectedNode.material.opacity = 1;
-//        lastNode = selectedNode;
-//
-//
-//
-//		
-//        // change the color of the closest face.
-//		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
-//		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
-//	}
-//
-//}
 
 function onDocumentMouseMove( event ) {
 
@@ -757,36 +718,6 @@ function update() {
     //
     //console.log(lines[0].parentNode.object.position);
     
-    
-    //var x = testline.geometry.vertices[0].x;
-
-    //console.log(testline.geometry.vertices[0].x);
-
-    //for (i = 0; i < lines.length; i++) {
-    //    var line = lines[i];
-    //    var parent = line.parentNode;
-    //    var child = line.childNode;
-    //    var name = line.name;
-    //    //var particles = line.particles;
-    //    //particles.origin = new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z);
-    //    //var dest = new THREE.Vector3(parent.object.position.x, parent.object.position.y, parent.object.position.z);
-    //    //particles.vector = dest.clone().sub(particles.origin.clone());
-
-    //    var geometry = new THREE.Geometry();
-    //    geometry.vertices.push(line.parentNode.object.position);
-    //    geometry.vertices.push(line.childNode.object.position);
-    //    
-    //    var l = scene.getObjectByName(lines[i].name);
-    //    scene.remove(l);
-    //    
-    //    lines[i] = new THREE.Line(geometry, lineMaterial);
-    //    lines[i].parentNode = parent;
-    //    lines[i].childNode = child;
-    //    lines[i].name = name;
-    //    //lines[i].particles = particles;
-    //    scene.add(line);
-    //    
-    //}
 
     for (i = 0; i < particleLines.length; i++) {
         var particles = particleLines[i];
