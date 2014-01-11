@@ -114,12 +114,21 @@ wsServer = new WebSocketServer({
 
 wsServer.on('request', function(request) {
 	var conn = request.accept('echo-protocol', request.origin);
-	log("Connection accepted.");
+	log("Connection accepted: " + request.origin);
+
+	var allConn = [];
+	allConn.push(conn);
+	allConn.push(request.origin);
+
 	conn.on('message', function(message) {
 		if (message.type === 'utf8') {
 			log("Received Message: " + message.utf8Data);
 			changedata(message.utf8Data);
-			conn.send(JSON.stringify(data));
+
+			for (var i = 0; i < allConn.length; i+=2) {
+				log("Sending data to: " + allConn[i+1]);
+				allConn[i].send(JSON.stringify(data));
+			}	
 		}
 	})
 	conn.send(JSON.stringify(data));
@@ -133,7 +142,7 @@ function changedata(term) {
 	appearFlag = false;
 	for (var i = 0; i < data.length; i++) {
 		if (data[i].name == breakTerm[0]) {
-			console.log("Node in Interrogation: " + data[i].name);
+			console.log("Node TBC: " + data[i].name);
 			console.log("Node before status: " + data[i].status);
 
 			data[i].status = breakTerm[1];
