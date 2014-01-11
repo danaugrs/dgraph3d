@@ -64,8 +64,17 @@
 		cursor:pointer;
 		border:1px solid #ecf0f1;
 	}
+	.Healthy {
+		background-color: green;
+	}
+	.Error {
+		background-color: red;
+	}
+	.Alert {
+		background-color: yellow;
+	}
 	</style>
-
+	
 	<script type = "text/javascript">
 	var data;
 	function initialize(newData) {
@@ -81,6 +90,7 @@
 		console.log(data);
 		for (var i = 0; i < data.length; i++) {
 			var submain = document.createElement("div");
+
 			submain.setAttribute("class","tiles");
 			submain.setAttribute('style','background-color:'+colorsOfTheRainbow[i % 6]);
 			
