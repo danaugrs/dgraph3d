@@ -14,6 +14,7 @@ var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
 var lastNode, nodeSelected, SELECTED, offset, plane;
 var testline, particleLines = [];
+var nodes;
 
 // custom global variables
 var cube;
@@ -36,22 +37,23 @@ var topBar = function() {
     
     this.save = function() {
         console.log("Saving changes...");
-        console.log(SELECTED);
-        nodeSelected.name = this.name;
-        var text = this.name + "\n" + "Status: " + nodeSelected.node.status;
-        var msgtex = makeMsgTexture( text, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-        nodeSelected.material.map = msgtex.texture;
-        nodeSelected.material.map.needsUpdate = true;// = tex;
-        nodeSelected.scale.x = msgtex.canvas.width * 0.3;
-        nodeSelected.scale.y = msgtex.canvas.height * 0.3;
+        console.log(nodeSelected.node);
+        nodeSelected.node.name = this.name;
+        updateNode(nodeSelected.node);
     };
     
     this.addChild = function() {
         console.log("Adding child...");
     };
     
+    this.sendError = function() {
+        console.log("Sending error...");
+        propagateStatus(nodeSelected.node, "ERROR");
+    };
+    
     this.delete = function() {
         console.log("Deleting node...");
+        deleteNode(nodeSelected);
     };
   // Define render logic ...
 };
@@ -66,11 +68,78 @@ gui.add(Gui, 'name').listen();
 //gui.add(text, 'displayOutline');
 gui.add(Gui, 'save');
 gui.add(Gui, 'addChild');
+gui.add(Gui, 'sendError');
 gui.add(Gui, 'delete');
+
+function bgColor(status) {
+    if (status == "OK") {
+        // Green
+        backgroundColor= {r:100, g:200, b:100, a:1};
+    }
+    if (status == "ERROR") {
+        // Green
+        backgroundColor= {r:200, g:100, b:100, a:1};
+    }
+    if (status == "ALERT") {
+        // Green
+        backgroundColor= {r:200, g:200, b:100, a:1};
+    }
+    return backgroundColor;
+
+}
+
+function propagateStatus(node, status) {
+    node.status = status;
+    updateNode(node);
+    if (status == "ERROR") {
+        setParentStatus(node, "ALERT");
+        
+        // TODO CHANGE PARTICLE COLORS
+        //var i;
+        //for (i = 0; i < lines.length; i++) {
+        //    var line = lines[i];
+        //    var parent = line.parentNode;
+        //    var child = line.childNode;
+        //    if (node.name == child.object.name) {
+        //        console.log(child.object.name, line.particles);
+        //        line.particles.system.material.color.r = 200;
+        //        line.particles.system.material.color.g = 100;
+        //        line.particles.system.material.color.b = 100;
+        //        line.particles.system.material.needsUpdate = true;
+        //    }
+        //}
+    }
+}
+
+function setParentStatus(node, status) {
+
+    var i;
+    console.log(node.parents);
+    for (i = 0; i < node.parents.length; i++) {
+        var n = DepTree.getNode(node.parents[i], nodes);
+        if (n.status == "ERROR" && status == "ALERT") {
+            continue
+        }
+        n.status = status;
+        updateNode(n);
+        setParentStatus(n, status);
+    }
+
+}
+
+function updateNode(node) {
+    var text = node.name + "\n" + "Status: " + node.status;
+    var msgtex = makeMsgTexture( text, { fontsize: 32, backgroundColor: bgColor(node.status) } );
+    node.object.material.map = msgtex.texture;
+    node.object.material.map.needsUpdate = true;// = tex;
+    node.object.scale.x = msgtex.canvas.width * 0.3;
+    node.object.scale.y = msgtex.canvas.height * 0.3;
+}
 
 
 // FUNCTIONS 		
 function init() {
+
 
     console.log("Initializing...");
 
@@ -96,7 +165,7 @@ function init() {
 
 	// EVENTS
 	THREEx.WindowResize(renderer, camera);
-	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	THREEx.FullScreen.bindKey({ charCode : ']'.charCodeAt(0) });
 
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -169,14 +238,14 @@ function init() {
     createTree(data);
 
 
-	var geometry = new THREE.SphereGeometry( 100, 4, 3 );
-	geometry.mergeVertices();
-	geometry.computeCentroids();
-	var material = new THREE.MeshNormalMaterial({wireframe: true});
-	mesh = new THREE.Mesh( geometry, material );
-	mesh.position.set(0,0,0);
-	mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
-	scene.add(mesh);
+	//var geometry = new THREE.SphereGeometry( 100, 4, 3 );
+	//geometry.mergeVertices();
+	//geometry.computeCentroids();
+	//var material = new THREE.MeshNormalMaterial({wireframe: true});
+	//mesh = new THREE.Mesh( geometry, material );
+	//mesh.position.set(0,0,0);
+	//mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
+	//scene.add(mesh);
 
 	
 }
@@ -200,13 +269,13 @@ function createParticleLine(origin, dest) {
     var origin = new THREE.Vector3(origin.x, origin.y, origin.z);
     var dest = new THREE.Vector3(dest.x, dest.y, dest.z);
 
-
-    console.log(origin, dest);
+    //console.log(origin, dest);
 
     var vector = dest.clone().sub(origin.clone());
     
-    console.log(vector.length());
-    var particleCount = Math.floor(vector.length()/2);
+    //console.log(vector.length());
+    //var particleCount = Math.floor(vector.length()/2);
+    var particleCount = Math.floor(vector.length()/7);
 
     // now create the individual particles
     for (var p = 0; p < particleCount; p++) {
@@ -250,18 +319,55 @@ function createParticleLine(origin, dest) {
 
 }
 
+function deleteNode(node) {
+   console.log(node);
+
+   var i, j;
+   for (i = 0; i < lines.length; i++) {
+       var line = lines[i];
+       var parent = line.parentNode;
+       var child = line.childNode;
+       // If line connected to selected object
+       if (node.name == parent.object.name || node.name == child.object.name) {
+           //recreate particle system
+           //console.log(parent.object.name, child.object.name, node.name, line);
+
+           var index = particleLines.indexOf(line.particles);
+           if (index > -1) {
+               particleLines.splice(index, 1);
+           }
+           scene.remove(line.particles.system);
+           
+           var index = lines.indexOf(line);
+           if (index > -1) {
+               lines.splice(index, 1);
+               i--;
+           }
+           scene.remove(line);
+       }
+   }
+   var index = nodeObjs.indexOf(node);
+   if (index > -1) {
+       nodeObjs.splice(index, 1);
+   }
+   scene.remove(node);
+
+}
+
 function createTree(data) {
 
     var i, p;
 
-    p = DepTree.getParentNode(data.nodes);
+    var obj = DepTree.getParentNode(data.nodes);
+    p = DepTree.getNode(obj.p, obj.nodes);
+
 
     console.log("Parent:", p.name);
 
     var levelHeight = 40;
     var coneRadius = 30;
     var parentZ = data.maxlevel/2;
-    var nodes = data.nodes;
+    nodes = data.nodes;
 
     p.position.y = parentZ * levelHeight;
     p.position.x = 0;
@@ -269,10 +375,20 @@ function createTree(data) {
 
     positionChildren(p, nodes, parentZ, levelHeight, coneRadius);
 
-    var nodes = createNodes(nodes);
+    nodes = createNodes(nodes);
     //console.log(scene);
     //console.log(nodes);
     createLines(nodes);
+    
+    if (p.name == "Ghost Node") {
+        console.log("Deleting ghost node");
+        var l = scene.getObjectByName(p.name);
+        deleteNode(l);
+    }
+    setTimeout(function() {
+        console.log("PROPAGATING");
+        propagateStatus(DepTree.getNode("Quicken", nodes), "ERROR");
+    }, 2000);
 
 }
 
@@ -287,8 +403,8 @@ function createLines(nodes) {
             geometry.dynamic = true;
             geometry.verticesNeedUpdate = true;
             var line = new THREE.Line(geometry, lineMaterial);
-            console.log(nodes[i], child);
             line.name = "line" + i;
+            console.log("Creating", line.name);//nodes[i], child);
             line.parentNode = nodes[i];
             line.childNode = child;
             line.particles = createParticleLine(line.childNode.position, line.parentNode.position);
@@ -310,8 +426,13 @@ function positionChildren(node, nodes, parentZ, levelHeight, coneRadius) {
             console.log(child.name, child.angle, node.deps.length);
             child.position = {};
             child.position.y = (parentZ - child.level + 1) * levelHeight;
-            child.position.x = node.position.x + Math.cos(child.angle) * coneRadius * child.level;
-            child.position.z = node.position.z + Math.sin(child.angle) * coneRadius * child.level;
+            if (node.name == "Ghost Node") {
+                coneR = coneRadius*3;
+            } else {
+                coneR = coneRadius;
+            }
+            child.position.x = node.position.x + Math.cos(child.angle) * coneR * child.level;
+            child.position.z = node.position.z + Math.sin(child.angle) * coneR * child.level;
         }
     }
     for (i = 0; i < node.deps.length; i++) { 
@@ -328,7 +449,7 @@ function createNodes(data) {
     for (i = 0; i < data.length; i++) {
         console.log(data[i]);
         var text = data[i].name + "\n" + "Status: " + data[i].status;
-		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position , node: data[i]} );
+		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: bgColor(data[i].status), position: data[i].position , node: data[i]} );
 		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
 		//scene.add( data[i].sprite );
         //targetList.push(data[i].sprite);
@@ -414,7 +535,7 @@ function makeMsgTexture( message, parameters ) {
     }
     //metrics = context.measureText( message )
 	var textWidth = metrics.width;
-    console.log(canvas.width, canvas.height, textWidth);
+    //console.log(canvas.width, canvas.height, textWidth);
     context.canvas.width = textWidth + 2*borderThickness;
     context.canvas.height = fontsize * 1.2 * lines.length + 2*borderThickness;
 	
@@ -660,36 +781,6 @@ function update() {
     //
     //console.log(lines[0].parentNode.object.position);
     
-    
-    //var x = testline.geometry.vertices[0].x;
-
-    //console.log(testline.geometry.vertices[0].x);
-
-    //for (i = 0; i < lines.length; i++) {
-    //    var line = lines[i];
-    //    var parent = line.parentNode;
-    //    var child = line.childNode;
-    //    var name = line.name;
-    //    //var particles = line.particles;
-    //    //particles.origin = new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z);
-    //    //var dest = new THREE.Vector3(parent.object.position.x, parent.object.position.y, parent.object.position.z);
-    //    //particles.vector = dest.clone().sub(particles.origin.clone());
-
-    //    var geometry = new THREE.Geometry();
-    //    geometry.vertices.push(line.parentNode.object.position);
-    //    geometry.vertices.push(line.childNode.object.position);
-    //    
-    //    var l = scene.getObjectByName(lines[i].name);
-    //    scene.remove(l);
-    //    
-    //    lines[i] = new THREE.Line(geometry, lineMaterial);
-    //    lines[i].parentNode = parent;
-    //    lines[i].childNode = child;
-    //    lines[i].name = name;
-    //    //lines[i].particles = particles;
-    //    scene.add(line);
-    //    
-    //}
 
     for (i = 0; i < particleLines.length; i++) {
         var particles = particleLines[i];
