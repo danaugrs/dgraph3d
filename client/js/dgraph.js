@@ -39,7 +39,7 @@ var nodes = [];
 
 // DEBUGGING / DEMO -----------------------------
 
-var useServerData = false;
+var useServerData = true;
 
 // -----------------------------------------------
 
@@ -249,11 +249,9 @@ socket.addEventListener("message", function(event) {
             console.log(data);
             createTree(data);
         }
-    } else {
+    } else if (useServerData) {
         l = event.data.split(": ");
         propagateStatus(DepTree.getNode(l[0], nodes), l[1]); 
-
-
     }
 });
 
