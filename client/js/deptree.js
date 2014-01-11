@@ -18,7 +18,12 @@ function map(nodes) {
     }
 
     // TODO Implement several parents (loop anywhere there is a reference to one parent)
-    p = getParentNode(nodes);
+    var obj = getParentNode(nodes);
+    
+    var p = obj.p;
+    var nodes = obj.nodes;
+
+    console.log(obj);
 
     while (nodesToProcess(nodes).length > 0) {
         processLevel(p, nodes);
@@ -31,12 +36,39 @@ function map(nodes) {
 }
 
 function getParentNode(nodes) {
+    var p = [];
+    var i, o;
     for (i = 0; i < nodes.length; i++) {
         if (nodes[i].parents.length == 0) {
-            return nodes[i];          
+            pushUnique(p, nodes[i].name);          
         }
     }
+    // If multiple parents add them all under an imaginary parent
+    if (p.length > 1) {
+        var o = {
+            name: "Ghost Node",
+            deps: p,
+            parents: [],
+            processed: false,
+            position: {}
+            //angle = null
 
+        };
+        nodes.push(o);
+        for (i = 0; i < nodes.length; i++) {
+            processParents(nodes[i], nodes);
+        }
+        console.log("GN", nodes);
+        return {
+            p: o,
+            nodes: nodes
+        };
+    } else {
+        return {
+            p: p[0],
+            nodes: nodes
+        };
+    }
 }
 
 function getMaxLevel(pnodes) {
@@ -56,22 +88,21 @@ function processLevel(node, nodes) {
     if (node.processed == true) {
         return;
     }
-    //} else {
-        for (j = 0; j < node.parents.length; j++) {
-            //console.log("  parent", node.next[j]);
-            n = getNode(node.parents[j],nodes);
-            if (n.processed == false) { // if parent node has not level set yet
-                //console.log("  parent NOT PROCESSED", node.parents[j]);
-                return
-            }
-            //console.log("  parent", n.name, n.level);
-            //var temp = n.level;
-            if (n.level > node.level) {
-                node.level = n.level;
-                //console.log("    ", n.level);
-            }
+    for (j = 0; j < node.parents.length; j++) {
+        //console.log("  parent", node.next[j]);
+        n = getNode(node.parents[j],nodes);
+        if (n.processed == false) { // if parent node has not level set yet
+            //console.log("  parent NOT PROCESSED", node.parents[j]);
+            return
         }
-        node.level += 1;
+        //console.log("  parent", n.name, n.level);
+        //var temp = n.level;
+        if (n.level > node.level) {
+            node.level = n.level;
+            //console.log("    ", n.level);
+        }
+    }
+    node.level += 1;
     //}
     // repeat with children
     node.processed = true;
@@ -92,6 +123,7 @@ function processParents(node, nodes) {
     //node.analyzed = true;
     for (j = 0; j < node.deps.length; j++) {
         n = getNode(node.deps[j], nodes);
+        //console.log("node.d", node.deps[j]);
         //n.level += 1;
         //n.level = node.level + 1;
         pushUnique(n.parents, node.name);
