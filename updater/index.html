@@ -19,7 +19,7 @@
 		text-align:center;
 		font-family:Helvetica;
 		font-size:26;
-		vertical-align:20px;
+		color:white;
 	}
 	html {
 		background:url("intuithq.jpg") no-repeat center center fixed;
@@ -27,6 +27,42 @@
 		-moz-background-size: cover;
 		-o-background-size: cover;
 		background-size: cover;
+	}
+	.okay {
+		border: 1px solid black;
+		outline:none;
+		font-family:Helvetica;
+		background:#ecf0f1;
+		opacity:.65;
+		width:65px;
+	}
+	.okay:hover {
+		cursor:pointer;
+		border:1px solid #ecf0f1;
+	}
+	.error {
+		border: 1px solid black;
+		outline:none;
+		font-family:Helvetica;
+		background:#ecf0f1;
+		opacity:.65;
+		width:65px;
+	}
+	.error:hover {
+		cursor:pointer;
+		border:1px solid #ecf0f1;
+	}
+	.disc {
+		border: 1px solid black;
+		outline:none;
+		font-family:Helvetica;
+		background:#ecf0f1;
+		opacity:.65;
+		width:65px;
+	}
+	.disc:hover {
+		cursor:pointer;
+		border:1px solid #ecf0f1;
 	}
 	</style>
 
@@ -56,6 +92,7 @@
 			okButton.id = data[i].name;
 			okButton.name = "OK";
 			buttonCol.appendChild(okButton);
+			okButton.setAttribute("class","okay");
 
 			var errorButton = document.createElement("input");
 			errorButton.type = "button";
@@ -63,6 +100,7 @@
 			errorButton.id = data[i].name;
 			errorButton.name = "Error";
 			buttonCol.appendChild(errorButton);
+			errorButton.setAttribute("class","error");
 
 			var discButton = document.createElement("input");
 			discButton.type = "button";
@@ -70,6 +108,7 @@
 			discButton.id = data[i].name;
 			discButton.name = "Disconnect";
 			buttonCol.appendChild(discButton);
+			discButton.setAttribute("class","disc");
 			
 			main.appendChild(submain);
 			submain.appendChild(nameCol);
