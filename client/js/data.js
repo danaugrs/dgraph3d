@@ -1,14 +1,14 @@
-//module.exports = [
-//	{
-//		"name" : "Credit Card Processing",
-//		"deps" : [],
-//		"status": "OK"
-//	},
-//	{
-//		"name" : "Billing Manager",
-//		"deps" : [],
-//		"status": "OK"
-//	},
+module.exports = [
+	{
+		"name" : "Credit Card Processing",
+		"deps" : [],
+		"status": "OK"
+	},
+	{
+		"name" : "Billing Manager",
+		"deps" : [],
+		"status": "OK"
+	},
 //	{
 //		"name" : "Demandforce",
 //		"deps" : ["GoPayment", "Address Verification"],
@@ -19,16 +19,16 @@
 //		"deps" : ["Credit Card Processing"],
 //		"status": "OK"
 //	},
-//	{
-//		"name" : "Intuit Eclipse",
-//		"deps" : ["Credit Check"],
-//		"status": "OK"
-//	},
-//	{
-//		"name" : "Intuit Payroll",
-//		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
-//		"status": "OK"
-//	},
+	{
+		"name" : "Intuit Eclipse",
+		"deps" : ["Credit Check"],
+		"status": "OK"
+	},
+	{
+		"name" : "Intuit Payroll",
+		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
+		"status": "OK"
+	},
 //	{
 //		"name" : "Intuit Websites",
 //		"deps" : ["Credit Check", "Billing Manager"],
@@ -69,43 +69,43 @@
 //		"deps" : ["Credit Card Processing", "Quicken"],
 //		"status": "OK"
 //	},
-//	{
-//		"name" : "Address Verification",
-//		"deps" : [],
-//		"status": "OK"
-//	},
-//	{
-//		"name" : "Credit Check",
-//		"deps" : ["Credit Card Processing"],
-//		"status": "OK"
-//	}
-//];
-
-module.exports = [
-    
-    {
-    name: "node4",
-    deps: ["node5", "node2"]
-    },
-
-    {
-    name: "node2",
-    deps: []
-    },
-
-    {
-    name: "node3",
-    deps: ["node2", "node4", "node5"]
-    },
-
-    {
-    name: "node5",
-    deps: []
-    },
-    
-    {
-    name: "node1",
-    deps: ["node2", "node3"]
-    }
-
+	{
+		"name" : "Address Verification",
+		"deps" : [],
+		"status": "OK"
+	},
+	{
+		"name" : "Credit Check",
+		"deps" : ["Credit Card Processing"],
+		"status": "OK"
+	}
 ];
+
+//module.exports = [
+//    
+//    {
+//    name: "node4",
+//    deps: ["node5", "node2"]
+//    },
+//
+//    {
+//    name: "node2",
+//    deps: []
+//    },
+//
+//    {
+//    name: "node3",
+//    deps: ["node2", "node4", "node5"]
+//    },
+//
+//    {
+//    name: "node5",
+//    deps: []
+//    },
+//    
+//    {
+//    name: "node1",
+//    deps: ["node2", "node3"]
+//    }
+//
+//];
