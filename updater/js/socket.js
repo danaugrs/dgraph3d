@@ -123,36 +123,14 @@ wsServer.on('request', function(request) {
 	conn.on('message', function(message) {
 		if (message.type === 'utf8') {
 			log("Received Message: " + message.utf8Data);
-			changedata(message.utf8Data);
+			// changedata(message.utf8Data);
 
 			for (var i = 0; i < allConn.length; i+=2) {
 				log("Sending data to: " + allConn[i+1]);
-				allConn[i].send(JSON.stringify(data));
+				// allConn[i].send(JSON.stringify(data));
+				allConn[i].send(message.utf8Data);
 			}	
 		}
 	})
 	conn.send(JSON.stringify(data));
 })
-
-function changedata(term) {
-	var breakTerm = term.split(': ');
-	console.log("node name: " + breakTerm[0]);
-	console.log("node new status: " + breakTerm[1]);
-
-	appearFlag = false;
-	for (var i = 0; i < data.length; i++) {
-		if (data[i].name == breakTerm[0]) {
-			console.log("Node TBC: " + data[i].name);
-			console.log("Node before status: " + data[i].status);
-
-			data[i].status = breakTerm[1];
-			console.log("Node after status: " + data[i].status);
-
-			appearFlag = true;
-		}
-	}
-	if (!appearFlag) {
-		console.log("No change in status for " + data[i].name)
-	}
-
-}

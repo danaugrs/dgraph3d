@@ -67,8 +67,9 @@
 	</style>
 
 	<script type = "text/javascript">
-	function initialize(data) {
-		populateData(JSON.parse(data));
+	var data;
+	function initialize() {
+		populateData(data);
 		addButtonFx();
 	}
 
@@ -159,7 +160,8 @@
 
 	socket.addEventListener("message", function(event) {
 		console.log("WebSocket data incoming:" + event.data);
-		initialize(event.data);
+		changedata(event.data);
+
 	});	
 
 	socket.addEventListener("error", function(event) {
@@ -169,6 +171,28 @@
     socket.addEventListener("close", function(event) {
         console.log("Websocket connection closed.");
     });
+}
+
+	function changedata(term) {
+	var breakTerm = term.split(': ');
+	console.log("node name: " + breakTerm[0]);
+	console.log("node new status: " + breakTerm[1]);
+
+	appearFlag = false;
+	for (var i = 0; i < data.length; i++) {
+		if (data[i].name == breakTerm[0]) {
+			console.log("Node TBC: " + data[i].name);
+			console.log("Node before status: " + data[i].status);
+
+			data[i].status = breakTerm[1];
+			console.log("Node after status: " + data[i].status);
+
+			appearFlag = true;
+		}
+	}
+	if (!appearFlag) {
+		console.log("No change in status for " + data[i].name)
+	}
 }
 	</script>
 </head>
