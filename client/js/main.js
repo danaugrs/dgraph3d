@@ -167,10 +167,33 @@ function updateNode(node) {
     node.object.scale.y = msgtex.canvas.height * 0.3;
 }
 
+// WEBSOCKET CLIENT
+socket = new WebSocket("ws://www.norselords.com:7777", "echo-protocol");
+
+socket.addEventListener("open", function(event) {
+    console.log("Websocket connected!");
+});
+
+// Display messages received from the server
+socket.addEventListener("message", function(event) {
+    console.log("Websocket data!");
+    console.log(event.data);
+});
+
+// Display any errors that occur
+socket.addEventListener("error", function(event) {
+    console.log("Websocket error.");
+});
+
+socket.addEventListener("close", function(event) {
+    console.log("Websocket connection closed.");
+});
+
+module.exports = socket;
+
 
 // FUNCTIONS 		
 function init() {
-
 
     console.log("Initializing...");
 
