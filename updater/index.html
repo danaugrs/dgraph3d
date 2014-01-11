@@ -26,10 +26,12 @@
     // alert('clicked!');
 // });
 	function populateData(data) {
-		console.log(data);
+		// console.log(data);
+		var main = document.getElementById("nodes");
+		main.innerHTML = "";
 		for (var i = 0; i < data.length; i++) {
 			console.log(data[i]);
-			var main = document.getElementById("nodes");
+			
 			
 
 			var nameCol = document.createElement("div");
