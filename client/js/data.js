@@ -2,82 +2,82 @@ module.exports = [
 	{
 		"name" : "Credit Card Processing",
 		"deps" : [],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Billing Manager",
 		"deps" : [],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Demandforce",
 		"deps" : ["GoPayment", "Address Verification"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "GoPayment",
 		"deps" : ["Credit Card Processing"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Intuit Eclipse",
 		"deps" : ["Credit Check"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Intuit Payroll",
 		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Intuit Websites",
 		"deps" : ["Credit Check", "Billing Manager"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Mint.com",
 		"deps" : ["Credit Check"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Quickbooks",
 		"deps" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Quicken",
 		"deps" : [],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "TurboTax_1",
 		"deps" : ["TurboTax_2", "TurboTax_3"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "TurboTax_2",
 		"deps" : ["TurboTax_3"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "TurboTax_3",
 		"deps" : [],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "IntuitMarket.com",
 		"deps" : ["Credit Card Processing", "Quicken"],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Address Verification",
 		"deps" : [],
-		"status": "OK"
+		"status": "Healthy"
 	},
 	{
 		"name" : "Credit Check",
 		"deps" : ["Credit Card Processing"],
-		"status": "OK"
+		"status": "Healthy"
 	}
 ];
 

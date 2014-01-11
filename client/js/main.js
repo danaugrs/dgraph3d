@@ -53,7 +53,7 @@ var topBar = function() {
             console.log("Adding child...");
             var node = {
                 name: "Child"+count(),
-                status: "OK",
+                status: "Healthy",
                 deps: [],
                 parents: [nodeSelected.node.name]
             }
@@ -69,12 +69,12 @@ var topBar = function() {
     
     this.sendError = function() {
         console.log("Sending error...");
-        propagateStatus(nodeSelected.node, "ERROR");
+        propagateStatus(nodeSelected.node, "Error");
     };
     
-    this.setOK = function() {
+    this.setHealthy = function() {
         console.log("Sending error...");
-        propagateStatus(nodeSelected.node, "OK");
+        propagateStatus(nodeSelected.node, "Healthy");
     };
     
     this.delete = function() {
@@ -95,19 +95,19 @@ gui.add(Gui, 'name').listen();
 gui.add(Gui, 'save');
 gui.add(Gui, 'addChild');
 gui.add(Gui, 'sendError');
-gui.add(Gui, 'setOK');
+gui.add(Gui, 'setHealthy');
 gui.add(Gui, 'delete');
 
 function bgColor(status) {
-    if (status == "OK") {
+    if (status == "Healthy") {
         // Green
         backgroundColor= {r:100, g:200, b:100, a:1};
     }
-    if (status == "ERROR") {
+    if (status == "Error") {
         // Green
         backgroundColor= {r:200, g:100, b:100, a:1};
     }
-    if (status == "ALERT") {
+    if (status == "Alert") {
         // Green
         backgroundColor= {r:200, g:200, b:100, a:1};
     }
@@ -118,8 +118,8 @@ function bgColor(status) {
 function propagateStatus(node, status) {
     node.status = status;
     updateNode(node);
-    if (status == "ERROR") {
-        setParentStatus(node, "ALERT");
+    if (status == "Error") {
+        setParentStatus(node, "Alert");
         
         // TODO CHANGE PARTICLE COLORS
         //var i;
@@ -136,8 +136,8 @@ function propagateStatus(node, status) {
         //    }
         //}
     }
-    if (status == "OK") {
-        setParentStatus(node, "OK");
+    if (status == "Healthy") {
+        setParentStatus(node, "Healthy");
 
     }
 }
@@ -148,7 +148,7 @@ function setParentStatus(node, status) {
     console.log(node.parents);
     for (i = 0; i < node.parents.length; i++) {
         var n = DepTree.getNode(node.parents[i], nodes);
-        if (n.status == "ERROR" && status == "ALERT") {
+        if (n.status == "Error" && status == "Alert") {
             continue
         }
         n.status = status;
@@ -418,7 +418,7 @@ function createTree(data) {
 
     console.log("Parent:", p.name);
 
-    var levelHeight = 40;
+    var levelHeight = 60;
     var coneRadius = 30;
     var parentZ = data.maxlevel/2;
     nodes = data.nodes;
@@ -441,7 +441,7 @@ function createTree(data) {
     }
     setTimeout(function() {
         console.log("PROPAGATING");
-        propagateStatus(DepTree.getNode("Quicken", nodes), "ERROR");
+        propagateStatus(DepTree.getNode("Quicken", nodes), "Error");
     }, 2000);
 
 }
