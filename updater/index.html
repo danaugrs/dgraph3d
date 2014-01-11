@@ -14,9 +14,19 @@
 	
 	.tiles {
 		width:200px;
-		height:200px;
+		height:150px;
 		float:left;
 		text-align:center;
+		font-family:Helvetica;
+		font-size:26;
+		vertical-align:20px;
+	}
+	html {
+		background:url("intuithq.jpg") no-repeat center center fixed;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		-o-background-size: cover;
+		background-size: cover;
 	}
 	</style>
 
@@ -27,13 +37,15 @@
 	}
 
 	function populateData(data) {
+		var colorsOfTheRainbow = ["#16a085", "#8e44ad", "#d35400", "#2a83be", "#2c3e50", "#27ae60", "#c0392b"]
 		var main = document.getElementById("nodes");
 		main.innerHTML = "";
 
 		for (var i = 0; i < data.length; i++) {
 			var submain = document.createElement("div");
 			submain.setAttribute("class","tiles");
-
+			submain.setAttribute('style','background-color:'+colorsOfTheRainbow[i % 6]);
+			
 			var nameCol = document.createElement("div");
 			nameCol.innerHTML += data[i].name + "<br>Status: " + data[i].status + "<br>";
 
@@ -62,6 +74,14 @@
 			main.appendChild(submain);
 			submain.appendChild(nameCol);
 			submain.appendChild(buttonCol);
+			
+			if ((i+1) % 4 == 0)
+			{
+				var extraSpace = document.createElement("div");
+				extraSpace.setAttribute('style','width:300px;height:160px');
+				main.appendChild(extraSpace);
+			}
+
 		}
 	}
 
@@ -116,7 +136,7 @@
 <body>
 
 <form>
-	<br/>
+	<br/><br/>
 	<center>
 	<div id = "nodes"></div>
 	<script>
