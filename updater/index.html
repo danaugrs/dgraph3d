@@ -40,7 +40,7 @@
 		cursor:pointer;
 		border:1px solid #ecf0f1;
 	}
-	.error {
+	.sick {
 		border: 1px solid black;
 		outline:none;
 		font-family:Helvetica;
@@ -48,7 +48,7 @@
 		opacity:.65;
 		width:65px;
 	}
-	.error:hover {
+	.sick:hover {
 		cursor:pointer;
 		border:1px solid #ecf0f1;
 	}
@@ -86,6 +86,7 @@
 			
 			var nameCol = document.createElement("div");
 			nameCol.innerHTML += data[i].name + "<br>Status: " + data[i].status + "<br>";
+			nameCol.setAttribute("class", data[i].status);
 
 			var buttonCol = document.createElement("div");
 			var okButton = document.createElement("input");
@@ -102,7 +103,7 @@
 			errorButton.id = data[i].name;
 			errorButton.name = errorButton.value;
 			buttonCol.appendChild(errorButton);
-			errorButton.setAttribute("class","error");
+			errorButton.setAttribute("class","sick");
 
 			var discButton = document.createElement("input");
 			discButton.type = "button";
