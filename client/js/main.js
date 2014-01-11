@@ -1,7 +1,7 @@
 /**
  * DGraph 0.0.1
  * 
- *      A 3D dependency grapher
+ *      3D real-time dependency graphing using Three.js and Node.js.
  *
  */
 
@@ -18,9 +18,10 @@ var cube;
 var projector, mouse = { x: 0, y: 0 }, INTERSECTED;
 var sprite1;
 var canvas1, context1, texture1;
+var targetList = [];
 
 init();
-animate();
+render();
 
 // FUNCTIONS 		
 function init() {
@@ -70,7 +71,14 @@ function init() {
 	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
 	scene.add(skyBox);
 	
-	////////////
+
+    // initialize object to perform world/screen calculations
+	projector = new THREE.Projector();
+	
+	// when the mouse moves, call the given function
+	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	
+    ////////////
 	// CUSTOM //
 	////////////
 
@@ -162,12 +170,27 @@ function createSprites(data) {
 		data[i].sprite = makeTextSprite(data[i].name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
 		data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
 		scene.add( data[i].sprite );
+        targetList.push(data[i].sprite);
     }
 
 }
 
-// Create a text sprite
-function makeTextSprite( message, parameters ) {
+function makeNode( message, parameters ) {
+
+    var geometry = new THREE.CubeGeometry( 200, 200, 50 );
+
+	var texture = THREE.ImageUtils.loadTexture( 'textures/crate.gif' );
+	texture.anisotropy = renderer.getMaxAnisotropy();
+
+	var material = new THREE.MeshBasicMaterial( { map: texture } );
+
+	mesh = new THREE.Mesh( geometry, material );
+	scene.add( mesh );
+
+
+}
+
+function makeMsgTexture( message, parameters ) {
 
 	if ( parameters === undefined ) parameters = {};
 	
@@ -189,7 +212,6 @@ function makeTextSprite( message, parameters ) {
 	//var spriteAlignment = parameters.hasOwnProperty("alignment") ?
 	//	parameters["alignment"] : THREE.SpriteAlignment.topLeft;
 
-	var spriteAlignment = THREE.SpriteAlignment.center; //topLeft;
 		
 
 	var canvas = document.createElement('canvas');
@@ -237,7 +259,20 @@ function makeTextSprite( message, parameters ) {
     // canvas contents will be used for a texture
 	var texture = new THREE.Texture(canvas) 
 	texture.needsUpdate = true;
+    return {
+        texture: texture,
+        canvas: canvas
+    };
 
+}
+
+// Create a text sprite
+function makeTextSprite( message, parameters ) {
+
+    var msgtex = makeMsgTexture( message, parameters );
+    var texture = msgtex.texture;
+    var canvas = msgtex.canvas;
+	var spriteAlignment = THREE.SpriteAlignment.center;
 	var spriteMaterial = new THREE.SpriteMaterial( 
 		{ map: texture, useScreenCoordinates: false, alignment: spriteAlignment } );
 	var sprite = new THREE.Sprite( spriteMaterial );
@@ -267,21 +302,54 @@ function roundRect(ctx, x, y, w, h, r)
 	ctx.stroke();   
 }
 
-function animate() 
-{
-    requestAnimationFrame( animate );
-	render();		
-	update();
+function onDocumentMouseDown( event ) {
+	// the following line would stop any other event handler from firing
+	// (such as the mouse's TrackballControls)
+	event.preventDefault();
+	
+	console.log("Click.");
+	
+	// update the mouse variable
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	
+	// find intersections
+
+	// create a Ray with origin at the mouse position
+	//   and direction into the scene (camera direction)
+	var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+	projector.unprojectVector( vector, camera );
+	var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+	// create an array containing all objects in the scene with which the ray intersects
+	var intersects = ray.intersectObjects( targetList );
+	
+	// if there is one (or more) intersections
+	if ( intersects.length > 0 )
+	{
+		console.log("Hit @ " + toString( intersects[0].point ) );
+        console.log(intersects[0]);
+		
+        // change the color of the closest face.
+		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
+		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
+	}
+
 }
 
-function update()
-{
+// Loops
+
+function update() {
+
 	controls.update();
 	stats.update();
 }
 
-function render() 
-{
-	renderer.render( scene, camera );
+function render() {
+    requestAnimationFrame( render );
+	
+    update();
+	
+    renderer.render( scene, camera );
 }
 
