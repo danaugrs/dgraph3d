@@ -60,7 +60,6 @@ var topBar = function() {
     
     this.delete = function() {
         console.log("Deleting node...");
-        deleteNode(nodeSelected);
     };
   // Define render logic ...
 };
@@ -105,7 +104,7 @@ function init() {
 
 	// EVENTS
 	THREEx.WindowResize(renderer, camera);
-	THREEx.FullScreen.bindKey({ charCode : ']'.charCodeAt(0) });
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
 
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -178,14 +177,14 @@ function init() {
     createTree(data);
 
 
-	//var geometry = new THREE.SphereGeometry( 100, 4, 3 );
-	//geometry.mergeVertices();
-	//geometry.computeCentroids();
-	//var material = new THREE.MeshNormalMaterial({wireframe: true});
-	//mesh = new THREE.Mesh( geometry, material );
-	//mesh.position.set(0,0,0);
-	//mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
-	//scene.add(mesh);
+	var geometry = new THREE.SphereGeometry( 100, 4, 3 );
+	geometry.mergeVertices();
+	geometry.computeCentroids();
+	var material = new THREE.MeshNormalMaterial({wireframe: true});
+	mesh = new THREE.Mesh( geometry, material );
+	mesh.position.set(0,0,0);
+	mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
+	scene.add(mesh);
 
 	
 }
@@ -209,13 +208,13 @@ function createParticleLine(origin, dest) {
     var origin = new THREE.Vector3(origin.x, origin.y, origin.z);
     var dest = new THREE.Vector3(dest.x, dest.y, dest.z);
 
-    //console.log(origin, dest);
+
+    console.log(origin, dest);
 
     var vector = dest.clone().sub(origin.clone());
     
-    //console.log(vector.length());
-    //var particleCount = Math.floor(vector.length()/2);
-    var particleCount = Math.floor(vector.length()/7);
+    console.log(vector.length());
+    var particleCount = Math.floor(vector.length()/2);
 
     // now create the individual particles
     for (var p = 0; p < particleCount; p++) {
@@ -259,48 +258,11 @@ function createParticleLine(origin, dest) {
 
 }
 
-function deleteNode(node) {
-   console.log(node);
-
-   var i, j;
-   for (i = 0; i < lines.length; i++) {
-       var line = lines[i];
-       var parent = line.parentNode;
-       var child = line.childNode;
-       // If line connected to selected object
-       if (node.name == parent.object.name || node.name == child.object.name) {
-           //recreate particle system
-           //console.log(parent.object.name, child.object.name, node.name, line);
-
-           var index = particleLines.indexOf(line.particles);
-           if (index > -1) {
-               particleLines.splice(index, 1);
-           }
-           scene.remove(line.particles.system);
-           
-           var index = lines.indexOf(line);
-           if (index > -1) {
-               lines.splice(index, 1);
-               i--;
-           }
-           scene.remove(line);
-       }
-   }
-   var index = nodeObjs.indexOf(node);
-   if (index > -1) {
-       nodeObjs.splice(index, 1);
-   }
-   scene.remove(node);
-
-}
-
 function createTree(data) {
 
     var i, p;
 
-    var obj = DepTree.getParentNode(data.nodes);
-    p = DepTree.getNode(obj.p, obj.nodes);
-
+    p = DepTree.getParentNode(data.nodes);
 
     console.log("Parent:", p.name);
 
@@ -319,12 +281,6 @@ function createTree(data) {
     //console.log(scene);
     //console.log(nodes);
     createLines(nodes);
-    
-    if (p.name == "Ghost Node") {
-        console.log("Deleting ghost node");
-        var l = scene.getObjectByName(p.name);
-        deleteNode(l);
-    }
 
 }
 
@@ -339,8 +295,8 @@ function createLines(nodes) {
             geometry.dynamic = true;
             geometry.verticesNeedUpdate = true;
             var line = new THREE.Line(geometry, lineMaterial);
+            console.log(nodes[i], child);
             line.name = "line" + i;
-            console.log("Creating", line.name);//nodes[i], child);
             line.parentNode = nodes[i];
             line.childNode = child;
             line.particles = createParticleLine(line.childNode.position, line.parentNode.position);
@@ -362,13 +318,8 @@ function positionChildren(node, nodes, parentZ, levelHeight, coneRadius) {
             console.log(child.name, child.angle, node.deps.length);
             child.position = {};
             child.position.y = (parentZ - child.level + 1) * levelHeight;
-            if (node.name == "Ghost Node") {
-                coneR = coneRadius*3;
-            } else {
-                coneR = coneRadius;
-            }
-            child.position.x = node.position.x + Math.cos(child.angle) * coneR * child.level;
-            child.position.z = node.position.z + Math.sin(child.angle) * coneR * child.level;
+            child.position.x = node.position.x + Math.cos(child.angle) * coneRadius * child.level;
+            child.position.z = node.position.z + Math.sin(child.angle) * coneRadius * child.level;
         }
     }
     for (i = 0; i < node.deps.length; i++) { 
@@ -469,7 +420,7 @@ function makeMsgTexture( message, parameters ) {
     }
     //metrics = context.measureText( message )
 	var textWidth = metrics.width;
-    //console.log(canvas.width, canvas.height, textWidth);
+    console.log(canvas.width, canvas.height, textWidth);
     context.canvas.width = textWidth + 2*borderThickness;
     context.canvas.height = fontsize * 1.2 * lines.length + 2*borderThickness;
 	
@@ -840,16 +791,16 @@ module.exports = [
 		"deps" : [],
 		"status": "OK"
 	},
-	{
-		"name" : "Demandforce",
-		"deps" : ["GoPayment", "Address Verification"],
-		"status": "OK"
-	},
-	{
-		"name" : "GoPayment",
-		"deps" : ["Credit Card Processing"],
-		"status": "OK"
-	},
+//	{
+//		"name" : "Demandforce",
+//		"deps" : ["GoPayment", "Address Verification"],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "GoPayment",
+//		"deps" : ["Credit Card Processing"],
+//		"status": "OK"
+//	},
 	{
 		"name" : "Intuit Eclipse",
 		"deps" : ["Credit Check"],
@@ -860,46 +811,46 @@ module.exports = [
 		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
 		"status": "OK"
 	},
-	{
-		"name" : "Intuit Websites",
-		"deps" : ["Credit Check", "Billing Manager"],
-		"status": "OK"
-	},
-	{
-		"name" : "Mint.com",
-		"deps" : ["Credit Check"],
-		"status": "OK"
-	},
-	{
-		"name" : "Quickbooks",
-		"deps" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
-		"status": "OK"
-	},
-	{
-		"name" : "Quicken",
-		"deps" : [],
-		"status": "OK"
-	},
-	{
-		"name" : "TurboTax_1",
-		"deps" : ["TurboTax_2", "TurboTax_3"],
-		"status": "OK"
-	},
-	{
-		"name" : "TurboTax_2",
-		"deps" : ["TurboTax_3"],
-		"status": "OK"
-	},
-	{
-		"name" : "TurboTax_3",
-		"deps" : [],
-		"status": "OK"
-	},
-	{
-		"name" : "IntuitMarket.com",
-		"deps" : ["Credit Card Processing", "Quicken"],
-		"status": "OK"
-	},
+//	{
+//		"name" : "Intuit Websites",
+//		"deps" : ["Credit Check", "Billing Manager"],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "Mint.com",
+//		"deps" : ["Credit Check"],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "Quickbooks",
+//		"deps" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "Quicken",
+//		"deps" : [],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "TurboTax_1",
+//		"deps" : ["TurboTax_2", "TurboTax_3"],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "TurboTax_2",
+//		"deps" : ["TurboTax_3"],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "TurboTax_3",
+//		"deps" : [],
+//		"status": "OK"
+//	},
+//	{
+//		"name" : "IntuitMarket.com",
+//		"deps" : ["Credit Card Processing", "Quicken"],
+//		"status": "OK"
+//	},
 	{
 		"name" : "Address Verification",
 		"deps" : [],
@@ -41629,12 +41580,7 @@ function map(nodes) {
     }
 
     // TODO Implement several parents (loop anywhere there is a reference to one parent)
-    var obj = getParentNode(nodes);
-    
-    var p = obj.p;
-    var nodes = obj.nodes;
-
-    console.log(obj);
+    p = getParentNode(nodes);
 
     while (nodesToProcess(nodes).length > 0) {
         processLevel(p, nodes);
@@ -41647,39 +41593,12 @@ function map(nodes) {
 }
 
 function getParentNode(nodes) {
-    var p = [];
-    var i, o;
     for (i = 0; i < nodes.length; i++) {
         if (nodes[i].parents.length == 0) {
-            pushUnique(p, nodes[i].name);          
+            return nodes[i];          
         }
     }
-    // If multiple parents add them all under an imaginary parent
-    if (p.length > 1) {
-        var o = {
-            name: "Ghost Node",
-            deps: p,
-            parents: [],
-            processed: false,
-            position: {}
-            //angle = null
 
-        };
-        nodes.push(o);
-        for (i = 0; i < nodes.length; i++) {
-            processParents(nodes[i], nodes);
-        }
-        console.log("GN", nodes);
-        return {
-            p: o,
-            nodes: nodes
-        };
-    } else {
-        return {
-            p: p[0],
-            nodes: nodes
-        };
-    }
 }
 
 function getMaxLevel(pnodes) {
@@ -41699,21 +41618,22 @@ function processLevel(node, nodes) {
     if (node.processed == true) {
         return;
     }
-    for (j = 0; j < node.parents.length; j++) {
-        //console.log("  parent", node.next[j]);
-        n = getNode(node.parents[j],nodes);
-        if (n.processed == false) { // if parent node has not level set yet
-            //console.log("  parent NOT PROCESSED", node.parents[j]);
-            return
+    //} else {
+        for (j = 0; j < node.parents.length; j++) {
+            //console.log("  parent", node.next[j]);
+            n = getNode(node.parents[j],nodes);
+            if (n.processed == false) { // if parent node has not level set yet
+                //console.log("  parent NOT PROCESSED", node.parents[j]);
+                return
+            }
+            //console.log("  parent", n.name, n.level);
+            //var temp = n.level;
+            if (n.level > node.level) {
+                node.level = n.level;
+                //console.log("    ", n.level);
+            }
         }
-        //console.log("  parent", n.name, n.level);
-        //var temp = n.level;
-        if (n.level > node.level) {
-            node.level = n.level;
-            //console.log("    ", n.level);
-        }
-    }
-    node.level += 1;
+        node.level += 1;
     //}
     // repeat with children
     node.processed = true;
@@ -41734,7 +41654,6 @@ function processParents(node, nodes) {
     //node.analyzed = true;
     for (j = 0; j < node.deps.length; j++) {
         n = getNode(node.deps[j], nodes);
-        //console.log("node.d", node.deps[j]);
         //n.level += 1;
         //n.level = node.level + 1;
         pushUnique(n.parents, node.name);
