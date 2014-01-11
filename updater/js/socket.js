@@ -118,6 +118,7 @@ wsServer.on('request', function(request) {
 	conn.on('message', function(message) {
 		if (message.type === 'utf8') {
 			log("Received Message: " + message.utf8Data);
+			conn.send("response from changing status");
 		}
 		else if (message.type === 'binary') {
 			log("Received Message: " + message.binaryData)

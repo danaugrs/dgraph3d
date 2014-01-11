@@ -30,10 +30,10 @@
 		for (var i = 0; i < data.length; i++) {
 			console.log(data[i]);
 			var main = document.getElementById("nodes");
-			main.innerHTML += "<br>" + data[i].name;
+			
 
 			var nameCol = document.createElement("div");
-			nameCol.innerHTML = "Status: " + data[i].status;
+			nameCol.innerHTML += data[i].name + "<br>Status: " + data[i].status + "<br>";
 
 			var buttonCol = document.createElement("div");
 			var okButton = document.createElement("input");
