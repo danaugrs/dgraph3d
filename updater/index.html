@@ -6,7 +6,7 @@
 
 	</style>
 
-	<script src = "js/jquery-1.10.2.min.js"></script>
+	<script type = "text/javascript" src = "js/jquery-1.10.2.min.js"></script>
 
 	<script type = "text/javascript">
 
@@ -168,7 +168,7 @@
 	}
 
 	function startWebSocket() {
-	socket = new WebSocket("localhost:7777", "echo-protocol");
+	socket = new WebSocket("ws://localhost:8000", "echo-protocol");
 
 	socket.addEventListener("open", function(event) {
 		console.log("WebSocket connected.");
