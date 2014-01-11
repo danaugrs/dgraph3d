@@ -90,9 +90,9 @@
 			var buttonCol = document.createElement("div");
 			var okButton = document.createElement("input");
 			okButton.type = "button";
-			okButton.value = "OK";
+			okButton.value = "Healthy";
 			okButton.id = data[i].name;
-			okButton.name = "OK";
+			okButton.name = okButton.value;
 			buttonCol.appendChild(okButton);
 			okButton.setAttribute("class","okay");
 
@@ -100,15 +100,15 @@
 			errorButton.type = "button";
 			errorButton.value = "Error";
 			errorButton.id = data[i].name;
-			errorButton.name = "Error";
+			errorButton.name = errorButton.value;
 			buttonCol.appendChild(errorButton);
 			errorButton.setAttribute("class","error");
 
 			var discButton = document.createElement("input");
 			discButton.type = "button";
-			discButton.value = "Disconnect";
+			discButton.value = "Alert";
 			discButton.id = data[i].name;
-			discButton.name = "Disconnect";
+			discButton.name = discButton.value;
 			buttonCol.appendChild(discButton);
 			discButton.setAttribute("class","disc");
 			
@@ -127,7 +127,7 @@
 	}
 
 	function addButtonFx() {
-		var allOK = document.getElementsByName("OK");
+		var allOK = document.getElementsByName("Healthy");
 		for (var i = 0; i < allOK.length; i++) {
 			allOK[i].onclick = function() {
 				console.log(this.id + ": " + this.name);
@@ -143,7 +143,7 @@
 			}
 		}
 
-		var allDisc = document.getElementsByName("Disconnect");
+		var allDisc = document.getElementsByName("Alert");
 		for (var i = 0; i < allDisc.length; i++) {
 			allDisc[i].onclick = function() {
 				console.log(this.id + ": " + this.name);

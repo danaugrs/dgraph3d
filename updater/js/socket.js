@@ -7,82 +7,82 @@ var data = [
 	{
 		"name" : "Credit Card Processing",
 		"dependency" : [],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Billing Manager",
 		"dependency" : [],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Demandforce",
 		"dependency" : ["GoPayment", "Address Verification"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "GoPayment",
 		"dependency" : ["Credit Card Processing"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Intuit Eclipse",
 		"dependency" : ["Credit Check"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Intuit Payroll",
 		"dependency" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Intuit Websites",
 		"dependency" : ["Credit Check", "Billing Manager"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Mint.com",
 		"dependency" : ["Credit Check"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Quickbooks",
 		"dependency" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Quicken",
 		"dependency" : [],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "TurboTax_1",
 		"dependency" : ["TurboTax_2", "TurboTax_3"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "TurboTax_2",
 		"dependency" : ["TurboTax_3"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "TurboTax_3",
 		"dependency" : [],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "IntuitMarket.com",
 		"dependency" : ["Credit Card Processing", "Quicken"],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Address Verification",
 		"dependency" : [],
-		"status" : "OK"
+		"status" : "Healthy"
 	},
 	{
 		"name" : "Credit Check",
 		"dependency" : ["Credit Card Processing"],
-		"status" : "OK"
+		"status" : "Healthy"
 	}
 ];
 
