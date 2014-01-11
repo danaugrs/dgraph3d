@@ -340,7 +340,8 @@ function init() {
 
     lineMaterial = new THREE.LineBasicMaterial({
         color: 0xffffff,
-        opacity: 0.8
+        opacity: 0.3,
+        transparent: true
     });
 
     //var geometry = new THREE.Geometry();
@@ -385,15 +386,16 @@ function init() {
 	
 }
 
+var particleTex = THREE.ImageUtils.loadTexture("images/particle.png")
+var particleTexBlue = THREE.ImageUtils.loadTexture("images/particleBlue3.png")
+
 function createParticleLine(origin, dest) {
     // create the particle variables
         particles = new THREE.Geometry(),
         pMaterial = new THREE.ParticleBasicMaterial({
             color: 0xFFFFFF,
             size: 5,
-            map: THREE.ImageUtils.loadTexture(
-              "images/particle.png"
-            ),
+            map: particleTex,
             blending: THREE.AdditiveBlending,
             transparent: true
         });
@@ -807,7 +809,8 @@ function onDocumentMouseMove( event ) {
                 scene.remove(line.particles.system);
                 //scene.remove(line.particles.system);
                 lines[i].particles = createParticleLine(line.childNode.object.position, line.parentNode.object.position);
-                lines[i].particles.system.material.size = 10;
+                lines[i].particles.system.material.size = 12;
+                lines[i].particles.system.material.map = particleTexBlue;
 
             }
             scene.add(lines[i]);
@@ -898,7 +901,8 @@ function onDocumentMouseDown( event ) {
                 console.log(parent.object.name, child.object.name, SELECTED.name, line);
 
                 
-                material.size = 10;
+                material.size = 12
+                material.map = particleTexBlue;
                 //material.color = 0x000044;
                 //var index = particleLines.indexOf(line.particles);
                 //if (index > -1) {
@@ -910,6 +914,7 @@ function onDocumentMouseDown( event ) {
 
             } else {
                 material.size = 5;
+                material.map = particleTex;
                 //material.color = 0xFFFFFF;
                 // UNBOLD
 
