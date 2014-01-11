@@ -9,9 +9,10 @@ var DepTree = require("./deptree.js");
 var Data = require("./data.js");
 
 // standard global variables
-var nodes, data, container, lineMaterial, scene, camera, renderer, controls, stats;
+var data, container, lineMaterial, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
+var lastNode, selectedNode;
 
 // custom global variables
 var cube;
@@ -19,13 +20,16 @@ var projector, mouse = { x: 0, y: 0 }, INTERSECTED;
 var sprite1;
 var canvas1, context1, texture1;
 var targetList = [];
+var nodes = [];
 
 init();
 render();
 
 // FUNCTIONS 		
 function init() {
-	
+
+    console.log("Initializing...");
+
     // SCENE
 	scene = new THREE.Scene();
 
@@ -85,6 +89,8 @@ function init() {
     lineMaterial = new THREE.LineBasicMaterial({
         color: 0x0000ff
     });
+
+    makeNode("HELLO!", {position:{x: 0, y: 0, z: 0}});
    
     // Process data
     data = DepTree.map(Data);
@@ -120,7 +126,7 @@ function createTree(data) {
 
     positionChildren(p, data.nodes, parentZ, levelHeight, coneRadius);
 
-    createSprites(data.nodes);
+    createNodes(data.nodes);
     createLines(data.nodes);
 
 }
@@ -162,31 +168,43 @@ function positionChildren(node, nodes, parentZ, levelHeight, coneRadius) {
 }
 
 // Create sprites given list of objects with position property
-function createSprites(data) {
+function createNodes(data) {
 
     var i;
 
     for (i = 0; i < data.length; i++) {
-		data[i].sprite = makeTextSprite(data[i].name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-		data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
-		scene.add( data[i].sprite );
-        targetList.push(data[i].sprite);
+		data[i].object = makeNode(data[i].name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position } );
+		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
+		//scene.add( data[i].sprite );
+        //targetList.push(data[i].sprite);
     }
 
 }
 
-function makeNode( message, parameters ) {
+function makeNode( message, parameters) {
 
-    var geometry = new THREE.CubeGeometry( 200, 200, 50 );
+    
+    var msgtex = makeMsgTexture( message, parameters );
+    var texture = msgtex.texture;
+    var canvas = msgtex.canvas;
 
-	var texture = THREE.ImageUtils.loadTexture( 'textures/crate.gif' );
+    var scale = 0.3;
+    
+    var geometry = new THREE.CubeGeometry( canvas.width*scale, canvas.height*scale, 2 );
+
+	//var texture = THREE.ImageUtils.loadTexture( 'textures/crate.gif' );
 	texture.anisotropy = renderer.getMaxAnisotropy();
 
-	var material = new THREE.MeshBasicMaterial( { map: texture } );
+	var material = new THREE.MeshBasicMaterial({
+        map: texture,
+        opacity: 0.7,
+        transparent: true
+    });
 
 	mesh = new THREE.Mesh( geometry, material );
-	scene.add( mesh );
-
+    mesh.position = parameters.position;
+	scene.add(mesh);
+    nodes.push(mesh);
 
 }
 
@@ -232,6 +250,7 @@ function makeMsgTexture( message, parameters ) {
 	var textWidth = metrics.width;
     console.log(canvas.width, canvas.height, textWidth);
     context.canvas.width = textWidth + 2*borderThickness;
+    context.canvas.height = fontsize * 1.2 * lines.length + 2*borderThickness;
 	
     var context = canvas.getContext('2d');
 	context.font = "Bold " + fontsize + "px " + fontface;
@@ -322,13 +341,21 @@ function onDocumentMouseDown( event ) {
 	var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
 
 	// create an array containing all objects in the scene with which the ray intersects
-	var intersects = ray.intersectObjects( targetList );
+	var intersects = ray.intersectObjects( nodes );
 	
 	// if there is one (or more) intersections
-	if ( intersects.length > 0 )
-	{
-		console.log("Hit @ " + toString( intersects[0].point ) );
-        console.log(intersects[0]);
+	if ( intersects.length > 0 ) {
+        if (lastNode) {
+            lastNode.material.opacity = 0.7;
+        }
+        selectedNode = intersects[0].object;		
+        //console.log("Hit @ " + toString( intersects[0].point ) );
+        //console.log(intersects[0]);
+        selectedNode.material.opacity = 1;
+        lastNode = selectedNode;
+
+
+
 		
         // change the color of the closest face.
 		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
@@ -341,8 +368,22 @@ function onDocumentMouseDown( event ) {
 
 function update() {
 
+    var i;
+
 	controls.update();
 	stats.update();
+
+    for (i = 0; i < nodes.length; i++) {
+        //console.log(nodes[i]);
+        //console.log(camera.rotation.y, nodes[i].rotation.y);
+        var vector = new THREE.Vector3(camera.position.x - nodes[i].position.x, 0, camera.position.y-nodes[i].position.z);
+        //nodes[i].lookAt(camera.position);//rotation.y = camera.rotation.y;
+        //nodes[i].lookAt(vector);//rotation.y = camera.rotation.y;
+        //var a = controls.getAutoRotationAngle();
+        //console.log(controls);
+        //nodes[i].rotation.y = camera.rotation.y;
+    }
+
 }
 
 function render() {
