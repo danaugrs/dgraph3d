@@ -25,6 +25,12 @@ var targetList = [];
 var nodeObjs = [];
 var lines = [];
 
+// DEBUGGING / DEMO -----------------------------
+
+var useServerData = true;
+
+// -----------------------------------------------
+
 var increment = function() {
     var i = 0;
     return function() { return i += 1; };
@@ -37,7 +43,7 @@ init();
 render();
 
 var topBar = function() {
-    this.name = 'dat.gui';
+    this.name = 'DGraph 0.1.0';
     //this.speed = 0.8;
     //this.displayOutline = false;
     
@@ -167,17 +173,36 @@ function updateNode(node) {
     node.object.scale.y = msgtex.canvas.height * 0.3;
 }
 
+var firstTime = true;
+
 // WEBSOCKET CLIENT
-socket = new WebSocket("ws://www.norselords.com:7777", "echo-protocol");
+//socket = new WebSocket("ws://www.norselords.com:7777", "echo-protocol");
+socket = new WebSocket("ws://50.112.180.128:8000", "echo-protocol");
 
 socket.addEventListener("open", function(event) {
     console.log("Websocket connected!");
+    console.log(event.data);
 });
 
 // Display messages received from the server
 socket.addEventListener("message", function(event) {
     console.log("Websocket data!");
     console.log(event.data);
+    if (firstTime) {
+        console.log("Received tree!");
+        firstTime = false;
+        if (useServerData) {
+            var d = JSON.parse(event.data);
+            data = DepTree.map(d);
+            console.log(data);
+            createTree(data);
+        }
+    } else {
+        l = event.data.split(": ");
+        propagateStatus(DepTree.getNode(l[0], nodes), l[1]); 
+
+
+    }
 });
 
 // Display any errors that occur
@@ -279,17 +304,23 @@ function init() {
     //geometry.tangentsNeedUpdate = true;
     //testline = new THREE.Line(geometry, lineMaterial);
     //scene.add(testline);
-
+    
+    console.log("local:", Data);
 
     offset = new THREE.Vector3();
-   
-    // Process data
-    data = DepTree.map(Data);
+  
+    if (useServerData == false) {
 
-    console.log(data);
+        // Process data
+        data = DepTree.map(Data);
+        // EXAMPLE DATA
 
-    // Create Graph
-    createTree(data);
+        //console.log(data);
+
+        // Create Graph
+        createTree(data);
+
+    }
 
 
 	//var geometry = new THREE.SphereGeometry( 100, 4, 3 );
@@ -452,7 +483,7 @@ function createLines(nodeList) {
     for (i = 0; i < nodeList.length; i++) {
         for (j = 0; j < nodeList[i].deps.length; j++) {
             var child = DepTree.getNode(nodeList[i].deps[j], nodes);
-            console.log(nodeList[i].deps[j], child);
+            //console.log(nodeList[i].deps[j], child);
             var geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(nodeList[i].position.x, nodeList[i].position.y, nodeList[i].position.z));
             geometry.vertices.push(new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z));
@@ -460,7 +491,7 @@ function createLines(nodeList) {
             geometry.verticesNeedUpdate = true;
             var line = new THREE.Line(geometry, lineMaterial);
             line.name = "line" + i;
-            console.log("Creating", line.name);//nodes[i], child);
+            //console.log("Creating", line.name);//nodes[i], child);
             line.parentNode = nodeList[i];
             line.childNode = child;
             line.particles = createParticleLine(line.childNode.object.position, line.parentNode.object.position);
@@ -472,14 +503,14 @@ function createLines(nodeList) {
 
 function positionChildren(node, nodes, parentZ, levelHeight, coneRadius) {
     var i;
-    console.log("Positioning children of:", node.name);
+    //console.log("Positioning children of:", node.name);
     if (node.deps.length == 0) {return};
     for (i = 0; i < node.deps.length; i++) { 
         var child = DepTree.getNode(node.deps[i], nodes);
-        console.log(child.name);
+        //console.log(child.name);
         if (child.angle == null) {
             child.angle = (2*Math.PI / node.deps.length ) * (i+1);
-            console.log(child.name, child.angle, node.deps.length);
+            //console.log(child.name, child.angle, node.deps.length);
             child.position = {};
             child.position.y = (parentZ - child.level + 1) * levelHeight;
             if (node.name == "Ghost Node") {
@@ -503,7 +534,7 @@ function createNodes(data) {
     var i;
 
     for (i = 0; i < data.length; i++) {
-        console.log(data[i]);
+        //console.log(data[i]);
         var text = data[i].name + "\n" + "Status: " + data[i].status;
 		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: bgColor(data[i].status), position: data[i].position , node: data[i]} );
 		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
