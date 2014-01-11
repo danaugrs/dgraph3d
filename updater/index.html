@@ -11,13 +11,18 @@
     	height:50px;
     	font-family:Helvetica;
 	}
+	
+	.tiles {
+		width:200px;
+		height:200px;
+		float:left;
+		text-align:center;
+	}
 	</style>
 
-	<script type = "text/javascript" src = "js/jquery-1.10.2.min.js"></script>
+	<script type = "text/javascript" src="js/jquery-1.10.2.min.js"></script>
 
 	<script type = "text/javascript">
-
-	
 
 	function initialize(data) {
 		// modify data to point to incoming JSON file
@@ -37,17 +42,16 @@
 		for (var i = 0; i < data.length; i++) {
 			console.log(data[i]);
 			var main = document.getElementById("nodes");
-			
+			var submain = document.createElement("div");
+			submain.setAttribute("class","tiles");
 
 			var nameCol = document.createElement("div");
 			nameCol.innerHTML += data[i].name + "<br>Status: " + data[i].status + "<br>";
 
 			var buttonCol = document.createElement("div");
 			var okButton = document.createElement("input");
-			//var okButtonTxt = document.createTextNode("OK");
 			okButton.type = "button";
 			okButton.value = "OK";
-			//okButton.appendChild(okButtonTxt);
 			okButton.id = data[i].name;
 			okButton.name = "OK";
 			buttonCol.appendChild(okButton);
@@ -65,9 +69,10 @@
 			discButton.id = data[i].name;
 			discButton.name = "Disconnect";
 			buttonCol.appendChild(discButton);
-
-			main.appendChild(nameCol);
-			main.appendChild(buttonCol);
+			
+			main.appendChild(submain);
+			submain.appendChild(nameCol);
+			submain.appendChild(buttonCol);
 		}
 	}
 
@@ -116,15 +121,16 @@
     socket.addEventListener("close", function(event) {
         console.log("Websocket connection closed.");
     });
+    
+    document.addEventListener("load", startWebSocket(););
 }
 	</script>
 </head>
 <body>
-
 <form>
 	<input type = "button" onClick = "startWebSocket()" value = "Submit!">
-	<br><br>
-	<center>
+	<br/>
 	<div id = "nodes"></div>
-	</center>
 </form>
+</body>
+</html>
