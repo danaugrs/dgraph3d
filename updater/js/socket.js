@@ -118,7 +118,10 @@ wsServer.on('request', function(request) {
 	conn.on('message', function(message) {
 		if (message.type === 'utf8') {
 			log("Received Message: " + message.utf8Data);
-			conn.send("response from changing status");
+
+			changedata(message.utf8Data);
+
+			conn.send(JSON.stringify(data));
 		}
 		else if (message.type === 'binary') {
 			log("Received Message: " + message.binaryData)
@@ -129,6 +132,28 @@ wsServer.on('request', function(request) {
 	conn.send(JSON.stringify(data));
 })
 
+function changedata(term) {
+	var breakTerm = term.split(': ');
+	console.log("node name: " + breakTerm[0]);
+	console.log("node new status: " + breakTerm[1]);
+
+	appearFlag = false;
+	for (var i = 0; i < data.length; i++) {
+		if (data[i].name == breakTerm[0]) {
+			console.log("Node in Interrogation: " + data[i].name);
+			console.log("Node before status: " + data[i].status);
+
+			data[i].status = breakTerm[1];
+			console.log("Node after status: " + data[i].status);
+
+			appearFlag = true;
+		}
+	}
+	if (!appearFlag) {
+		console.log("No change in status for " + data[i].name)
+	}
+
+}
 // function main() {
 // 	log("Starting webserver...");
 // 	http.createServer(function(request, response) {
