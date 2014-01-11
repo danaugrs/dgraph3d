@@ -10,96 +10,14 @@
 
 	<script type = "text/javascript">
 
-	data = [
-	{
-		"name" : "Credit Card Processing",
-		"dependency" : [],
-		"status" : "OK"
-	},
-	{
-		"name" : "Billing Manager",
-		"dependency" : [],
-		"status" : "OK"
-	},
-	{
-		"name" : "Demandforce",
-		"dependency" : ["GoPayment", "Address Verification"],
-		"status" : "OK"
-	},
-	{
-		"name" : "GoPayment",
-		"dependency" : ["Credit Card Processing"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Intuit Eclipse",
-		"dependency" : ["Credit Check"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Intuit Payroll",
-		"dependency" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Intuit Websites",
-		"dependency" : ["Credit Check", "Billing Manager"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Mint.com",
-		"dependency" : ["Credit Check"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Quickbooks",
-		"dependency" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Quicken",
-		"dependency" : [],
-		"status" : "OK"
-	},
-	{
-		"name" : "TurboTax_1",
-		"dependency" : ["TurboTax_2", "TurboTax_3"],
-		"status" : "OK"
-	},
-	{
-		"name" : "TurboTax_2",
-		"dependency" : ["TurboTax_3"],
-		"status" : "OK"
-	},
-	{
-		"name" : "TurboTax_3",
-		"dependency" : [],
-		"status" : "OK"
-	},
-	{
-		"name" : "IntuitMarket.com",
-		"dependency" : ["Credit Card Processing", "Quicken"],
-		"status" : "OK"
-	},
-	{
-		"name" : "Address Verification",
-		"dependency" : [],
-		"status" : "OK"
-	},
-	{
-		"name" : "Credit Check",
-		"dependency" : ["Credit Card Processing"],
-		"status" : "OK"
-	}
-];
+	
 
-	function initialize() {
+	function initialize(data) {
 		// modify data to point to incoming JSON file
 		// console.log('adsf');
 		// $.getJSON('data.json', function(data) {
 			populateData(data);
 			addButtonFx();
-			startWebSocket();
 		// });
 	}
 
@@ -108,7 +26,9 @@
     // alert('clicked!');
 // });
 	function populateData(data) {
+		console.log(data);
 		for (var i = 0; i < data.length; i++) {
+			// console.log(data[i]);
 			var main = document.getElementById("nodes");
 			main.innerHTML += "<br>" + data[i].name;
 
@@ -134,9 +54,9 @@
 
 			var discButton = document.createElement("input");
 			discButton.type = "button";
-			discButton.value = "Disconnected";
+			discButton.value = "Disconnect";
 			discButton.id = data[i].name;
-			discButton.name = "Disconnected";
+			discButton.name = "Disconnect";
 			buttonCol.appendChild(discButton);
 
 			main.appendChild(nameCol);
@@ -148,21 +68,24 @@
 		var allOK = document.getElementsByName("OK");
 		for (var i = 0; i < allOK.length; i++) {
 			allOK[i].onclick = function() {
-				console.log(this.id);
+				console.log(this.id + ": " + this.name);
+				socket.send(this.id + ": " + this.name);
 			}
 		}
 
 		var allError = document.getElementsByName("Error");
 		for (var i = 0; i < allError.length; i++) {
 			allError[i].onclick = function() {
-				console.log(this.id);
+				console.log(this.id + ": " + this.name);
+				socket.send(this.id + ": " + this.name);
 			}
 		}
 
-		var allDisc = document.getElementsByName("Disconnected");
+		var allDisc = document.getElementsByName("Disconnect");
 		for (var i = 0; i < allDisc.length; i++) {
 			allDisc[i].onclick = function() {
-				console.log(this.id);
+				console.log(this.id + ": " + this.name);
+				socket.send(this.id + ": " + this.name);
 			}
 		}
 	}
@@ -175,8 +98,8 @@
 	});
 
 	socket.addEventListener("message", function(event) {
-		console.log("WebSocket data incoming:" + event.data);
-		// initialize(event.data);
+		console.log("WebSocket data incoming:" + JSON.parse(event.data));
+		initialize(event.data);
 	});	
 
 	socket.addEventListener("error", function(event) {
@@ -186,14 +109,13 @@
     socket.addEventListener("close", function(event) {
         console.log("Websocket connection closed.");
     });
-
 }
 	</script>
 </head>
 <body>
 
 <form>
-	<input type = "button" onClick = "initialize()" value = "Submit!">
+	<input type = "button" onClick = "startWebSocket()" value = "Submit!">
 	<br><br>
 	<center>
 	<div id = "nodes"></div>
