@@ -6,82 +6,82 @@ var PORT = 8000;
 var data = [
 	{
 		"name" : "Credit Card Processing",
-		"dependency" : [],
+		"deps" : [],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Billing Manager",
-		"dependency" : [],
+		"deps" : [],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Demandforce",
-		"dependency" : ["GoPayment", "Address Verification"],
+		"deps" : ["GoPayment", "Address Verification"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "GoPayment",
-		"dependency" : ["Credit Card Processing"],
+		"deps" : ["Credit Card Processing"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Intuit Eclipse",
-		"dependency" : ["Credit Check"],
+		"deps" : ["Credit Check"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Intuit Payroll",
-		"dependency" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
+		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Intuit Websites",
-		"dependency" : ["Credit Check", "Billing Manager"],
+		"deps" : ["Credit Check", "Billing Manager"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Mint.com",
-		"dependency" : ["Credit Check"],
+		"deps" : ["Credit Check"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Quickbooks",
-		"dependency" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
+		"deps" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Quicken",
-		"dependency" : [],
+		"deps" : [],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "TurboTax_1",
-		"dependency" : ["TurboTax_2", "TurboTax_3"],
+		"deps" : ["TurboTax_2", "TurboTax_3"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "TurboTax_2",
-		"dependency" : ["TurboTax_3"],
+		"deps" : ["TurboTax_3"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "TurboTax_3",
-		"dependency" : [],
+		"deps" : [],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "IntuitMarket.com",
-		"dependency" : ["Credit Card Processing", "Quicken"],
+		"deps" : ["Credit Card Processing", "Quicken"],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Address Verification",
-		"dependency" : [],
+		"deps" : [],
 		"status" : "Healthy"
 	},
 	{
 		"name" : "Credit Check",
-		"dependency" : ["Credit Card Processing"],
+		"deps" : ["Credit Card Processing"],
 		"status" : "Healthy"
 	}
 ];
