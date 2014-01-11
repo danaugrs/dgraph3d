@@ -1,0 +1,188 @@
+<html>
+<head>
+	<title>UI for Data Visualization</title>
+
+	<style type = "text/css">
+
+	</style>
+
+	<script src = "js/jquery-1.10.2.min.js"></script>
+	<script src = "js/socket.js"></script>
+
+	<script type = "text/javascript">
+	function initialize() {
+		// modify data to point to incoming JSON file
+		data = [
+	{
+		"name" : "Credit Card Processing",
+		"dependency" : [],
+		"status" : "OK"
+	},
+	{
+		"name" : "Billing Manager",
+		"dependency" : [],
+		"status" : "OK"
+	},
+	{
+		"name" : "Demandforce",
+		"dependency" : ["GoPayment", "Address Verification"],
+		"status" : "OK"
+	},
+	{
+		"name" : "GoPayment",
+		"dependency" : ["Credit Card Processing"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Intuit Eclipse",
+		"dependency" : ["Credit Check"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Intuit Payroll",
+		"dependency" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Intuit Websites",
+		"dependency" : ["Credit Check", "Billing Manager"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Mint.com",
+		"dependency" : ["Credit Check"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Quickbooks",
+		"dependency" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Quicken",
+		"dependency" : [],
+		"status" : "OK"
+	},
+	{
+		"name" : "TurboTax_1",
+		"dependency" : ["TurboTax_2", "TurboTax_3"],
+		"status" : "OK"
+	},
+	{
+		"name" : "TurboTax_2",
+		"dependency" : ["TurboTax_3"],
+		"status" : "OK"
+	},
+	{
+		"name" : "TurboTax_3",
+		"dependency" : [],
+		"status" : "OK"
+	},
+	{
+		"name" : "IntuitMarket.com",
+		"dependency" : ["Credit Card Processing", "Quicken"],
+		"status" : "OK"
+	},
+	{
+		"name" : "Address Verification",
+		"dependency" : [],
+		"status" : "OK"
+	},
+	{
+		"name" : "Credit Check",
+		"dependency" : ["Credit Card Processing"],
+		"status" : "OK"
+	}
+];
+
+		// console.log('adsf');
+		// $.getJSON('data.json', function(data) {
+			populateData(data);
+			addButtonFx();
+		// });
+	}
+
+
+			// $("#"+data[i].name+"OK").click(function(){
+    // alert('clicked!');
+// });
+	function populateData(data) {
+		for (var i = 0; i < data.length; i++) {
+			var main = document.getElementById("nodes");
+			main.innerHTML += "<br>" + data[i].name;
+
+			var nameCol = document.createElement("div");
+			nameCol.innerHTML = "Status: " + data[i].status;
+
+			var buttonCol = document.createElement("div");
+			var okButton = document.createElement("input");
+			//var okButtonTxt = document.createTextNode("OK");
+			okButton.type = "button";
+			okButton.value = "OK";
+			//okButton.appendChild(okButtonTxt);
+			okButton.id = data[i].name;
+			okButton.name = "OK";
+			buttonCol.appendChild(okButton);
+
+			var errorButton = document.createElement("input");
+			errorButton.type = "button";
+			errorButton.value = "Error";
+			errorButton.id = data[i].name;
+			errorButton.name = "Error";
+			buttonCol.appendChild(errorButton);
+
+			var discButton = document.createElement("input");
+			discButton.type = "button";
+			discButton.value = "Disconnected";
+			discButton.id = data[i].name;
+			discButton.name = "Disconnected";
+			buttonCol.appendChild(discButton);
+
+			main.appendChild(nameCol);
+			main.appendChild(buttonCol);
+		}
+	}
+
+	function test() {
+		console.log("click");
+
+	}
+
+	function addNodeName(name, dep) {
+		console.log(name, dep);
+
+	}
+
+	function addButtonFx() {
+		var allOK = document.getElementsByName("OK");
+		for (var i = 0; i < allOK.length; i++) {
+			allOK[i].onclick = function() {
+				console.log(this.id);
+			}
+		}
+
+		var allError = document.getElementsByName("Error");
+		for (var i = 0; i < allError.length; i++) {
+			allError[i].onclick = function() {
+				console.log(this.id);
+			}
+		}
+
+		var allDisc = document.getElementsByName("Disconnected");
+		for (var i = 0; i < allDisc.length; i++) {
+			allDisc[i].onclick = function() {
+				console.log(this.id);
+			}
+		}
+	}
+	</script>
+</head>
+<body>
+
+<form>
+	<input type = "button" onClick = "initialize()" value = "Submit!">
+	<br><br>
+	<center>
+	<div id = "nodes"></div>
+	</center>
+</form>
