@@ -12,7 +12,7 @@ var Data = require("./data.js");
 var data, container, lineMaterial, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
-var lastNode, SELECTED, offset, plane;
+var lastNode, nodeSelected, SELECTED, offset, plane;
 var testline;
 
 // custom global variables
@@ -28,6 +28,42 @@ exports.scene = scene;
 
 init();
 render();
+
+var topBar = function() {
+    this.name = 'dat.gui';
+    //this.speed = 0.8;
+    //this.displayOutline = false;
+    
+    this.save = function() {
+        console.log("Saving changes...");
+        console.log(SELECTED);
+        nodeSelected.name = this.name;
+        var tex = makeMsgTexture( this.name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
+        nodeSelected.material.map = tex;
+    };
+    
+    this.addChild = function() {
+        console.log("Adding child...");
+    };
+    
+    this.delete = function() {
+        console.log("Deleting node...");
+    };
+  // Define render logic ...
+};
+
+//window.onload = function() {
+//};
+
+var Gui = new topBar();
+var gui = new dat.GUI();
+gui.add(Gui, 'name').listen();
+//gui.add(text, 'speed', -5, 5);
+//gui.add(text, 'displayOutline');
+gui.add(Gui, 'save');
+gui.add(Gui, 'addChild');
+gui.add(Gui, 'delete');
+
 
 // FUNCTIONS 		
 function init() {
@@ -183,9 +219,7 @@ function createLines(nodes) {
             scene.add(line);
             lines.push(line);
         }
-
     }
-
 }
 
 function positionChildren(node, nodes, parentZ, levelHeight, coneRadius) {
@@ -225,7 +259,6 @@ function createNodes(data) {
 }
 
 function makeNode( message, parameters) {
-
     
     var msgtex = makeMsgTexture( message, parameters );
     var texture = msgtex.texture;
@@ -241,11 +274,13 @@ function makeNode( message, parameters) {
 	var material = new THREE.MeshBasicMaterial({
         map: texture,
         opacity: 0.7,
-        transparent: true
+        transparent: true,
+        needsUpdate: true
     });
 
 	mesh = new THREE.Mesh( geometry, material );
     mesh.position = parameters.position;
+    mesh.name = message;
 	scene.add(mesh);
     nodeObjs.push(mesh);
     return mesh;
@@ -483,6 +518,9 @@ function onDocumentMouseDown( event ) {
         }
 
 		SELECTED = intersects[ 0 ].object;
+        nodeSelected = SELECTED;
+
+        Gui.name = SELECTED.name;
 
 		var intersects = raycaster.intersectObject( plane );
 		offset.copy( intersects[ 0 ].point ).sub( plane.position );
@@ -546,12 +584,7 @@ function update() {
         geometry.vertices.push(line.childNode.object.position);
         
         var l = scene.getObjectByName(lines[i].name);
-        console.log(lines[i].name);
         scene.remove(l);
-        //line.geometry.dispose();
-	    //line.material.dispose();
-        //	texture.dispose();
-        //renderer.deallocateObject(testline);
         
         lines[i] = new THREE.Line(geometry, lineMaterial);
         lines[i].parentNode = parent;
@@ -559,8 +592,6 @@ function update() {
         lines[i].name = name;
         scene.add(line);
         
-        //line.geometry.vertices[0].y += 1;//line.parentNode.object.position;
-        //line.geometry.vertices[1] = line.childNode.object.position;
     }
 
     //for (i = 0; i < nodes.length; i++) {
