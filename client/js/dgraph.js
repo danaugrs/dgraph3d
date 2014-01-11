@@ -10,28 +10,36 @@ require.m[0] = {
  */
 
 var DepTree = require("./deptree.js");
-var Data = require("./data.js");
+
+var IntuitData = require("./intuit_data.js");
+var GoogleData = require("./google_data.js");
+        
+// Map Data
+var GoogleTree = DepTree.map(GoogleData);
+var IntuitTree = DepTree.map(IntuitData);
 
 // standard global variables
 var data, container, lineMaterial, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
 var lastNode, nodeSelected, SELECTED, offset, plane;
-var testline, particleLines = [];
-var nodes;
+var testline;
 
 // custom global variables
 var cube;
 var projector, mouse = { x: 0, y: 0 }, INTERSECTED;
 var sprite1;
 var canvas1, context1, texture1;
+
 var targetList = [];
 var nodeObjs = [];
 var lines = [];
+var particleLines = []
+var nodes = [];
 
 // DEBUGGING / DEMO -----------------------------
 
-var useServerData = true;
+var useServerData = false;
 
 // -----------------------------------------------
 
@@ -47,14 +55,14 @@ init();
 render();
 
 var topBar = function() {
-    this.name = 'DGraph 0.1.0';
+    this.displayName = 'DGraph 0.1.0';
     //this.speed = 0.8;
     //this.displayOutline = false;
     
     this.save = function() {
         console.log("Saving changes...");
         console.log(nodeSelected.node);
-        nodeSelected.node.name = this.name;
+        nodeSelected.node.name = this.displayName;
         updateNode(nodeSelected.node);
     };
     
@@ -91,22 +99,62 @@ var topBar = function() {
         console.log("Deleting node...");
         deleteNode(nodeSelected);
     };
-  // Define render logic ...
+
+    this.Google = function() {
+        reset();
+        data = GoogleTree;
+        // Create Graph
+        createTree(data);
+    };
+
+    this.Intuit = function() {
+        reset();
+        data = IntuitTree;
+        // Create Graph
+        createTree(IntuitTree);
+    }
+
 };
 
-//window.onload = function() {
-//};
 
 var Gui = new topBar();
 var gui = new dat.GUI();
-gui.add(Gui, 'name').listen();
+
+
+gui.add(Gui, 'displayName').listen();
 //gui.add(text, 'speed', -5, 5);
 //gui.add(text, 'displayOutline');
 gui.add(Gui, 'save');
 gui.add(Gui, 'addChild');
-gui.add(Gui, 'sendError');
-gui.add(Gui, 'setHealthy');
 gui.add(Gui, 'delete');
+
+var guid = gui.addFolder('Debugging');
+guid.add(Gui, 'sendError');
+guid.add(Gui, 'setHealthy');
+
+var guif = gui.addFolder('Load');
+guif.add(Gui, 'Intuit');
+guif.add(Gui, 'Google');
+
+
+function reset() {
+ 
+    console.log("Reset!");
+    var i;
+    console.log(nodes);
+    for (i = 0; i < nodes.length; i++) {
+        deleteNode(nodes[i].object);
+    }
+    //for (i = 0; i < lines.length; i++) {
+    //    scene.remove(lines[i].system);
+    //}
+    targetList = [];
+    nodeObjs = [];
+    lines = [];
+    particleLines = [];
+    nodes = [];
+
+}
 
 function bgColor(status) {
     if (status == "Healthy") {
@@ -216,6 +264,7 @@ socket.addEventListener("error", function(event) {
 
 socket.addEventListener("close", function(event) {
     console.log("Websocket connection closed.");
+    alert("Server offline");
 });
 
 module.exports = socket;
@@ -309,22 +358,20 @@ function init() {
     //testline = new THREE.Line(geometry, lineMaterial);
     //scene.add(testline);
     
-    console.log("local:", Data);
-
     offset = new THREE.Vector3();
   
-    if (useServerData == false) {
+    //if (useServerData == false) {
 
-        // Process data
-        data = DepTree.map(Data);
-        // EXAMPLE DATA
+    //    // Process data
+    //    //data = DepTree.map(Data);
+    //    data = DepTree.map(GoogleData);
 
-        //console.log(data);
+    //    //console.log(data);
 
-        // Create Graph
-        createTree(data);
+    //    // Create Graph
+    //    createTree(data);
 
-    }
+    //}
 
 
 	//var geometry = new THREE.SphereGeometry( 100, 4, 3 );
@@ -409,7 +456,7 @@ function createParticleLine(origin, dest) {
 }
 
 function deleteNode(node) {
-   console.log(node);
+   console.log("Deleting node:", node.name);
 
    var i, j;
    for (i = 0; i < lines.length; i++) {
@@ -474,10 +521,11 @@ function createTree(data) {
         var l = scene.getObjectByName(p.name);
         deleteNode(l);
     }
-    setTimeout(function() {
-        console.log("PROPAGATING");
-        propagateStatus(DepTree.getNode("Quicken", nodes), "Error");
-    }, 2000);
+    
+    //setTimeout(function() {
+    //    console.log("PROPAGATING");
+    //    propagateStatus(DepTree.getNode("Quicken", nodes), "Error");
+    //}, 2000);
 
 }
 
@@ -489,7 +537,7 @@ function createLines(nodeList) {
             var child = DepTree.getNode(nodeList[i].deps[j], nodes);
             //console.log(nodeList[i].deps[j], child);
             var geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(nodeList[i].position.x, nodeList[i].position.y, nodeList[i].position.z));
+            geometry.vertices.push(new THREE.Vector3(nodeList[i].object.position.x, nodeList[i].object.position.y, nodeList[i].object.position.z));
             geometry.vertices.push(new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z));
             geometry.dynamic = true;
             geometry.verticesNeedUpdate = true;
@@ -543,7 +591,6 @@ function createNodes(data) {
 		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: bgColor(data[i].status), position: data[i].position , node: data[i]} );
 		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
 		//scene.add( data[i].sprite );
-        //targetList.push(data[i].sprite);
     }
 
     return data;
@@ -824,7 +871,7 @@ function onDocumentMouseDown( event ) {
 		SELECTED = intersects[ 0 ].object;
         nodeSelected = SELECTED;
 
-        Gui.name = SELECTED.name;
+        Gui.displayName = SELECTED.name;
 
 		var intersects = raycaster.intersectObject( plane );
 		offset.copy( intersects[ 0 ].point ).sub( plane.position );
@@ -912,119 +959,6 @@ function render() {
     renderer.render( scene, camera );
 }
 
-},
-"data.js": function(module, exports, require){
-module.exports = [
-	{
-		"name" : "Credit Card Processing",
-		"deps" : [],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Billing Manager",
-		"deps" : [],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Demandforce",
-		"deps" : ["GoPayment", "Address Verification"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "GoPayment",
-		"deps" : ["Credit Card Processing"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Intuit Eclipse",
-		"deps" : ["Credit Check"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Intuit Payroll",
-		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Intuit Websites",
-		"deps" : ["Credit Check", "Billing Manager"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Mint.com",
-		"deps" : ["Credit Check"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Quickbooks",
-		"deps" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Quicken",
-		"deps" : [],
-		"status": "Healthy"
-	},
-	{
-		"name" : "TurboTax_1",
-		"deps" : ["TurboTax_2", "TurboTax_3"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "TurboTax_2",
-		"deps" : ["TurboTax_3"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "TurboTax_3",
-		"deps" : [],
-		"status": "Healthy"
-	},
-	{
-		"name" : "IntuitMarket.com",
-		"deps" : ["Credit Card Processing", "Quicken"],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Address Verification",
-		"deps" : [],
-		"status": "Healthy"
-	},
-	{
-		"name" : "Credit Check",
-		"deps" : ["Credit Card Processing"],
-		"status": "Healthy"
-	}
-];
-
-//module.exports = [
-//    
-//    {
-//    name: "node4",
-//    deps: ["node5", "node2"]
-//    },
-//
-//    {
-//    name: "node2",
-//    deps: []
-//    },
-//
-//    {
-//    name: "node3",
-//    deps: ["node2", "node4", "node5"]
-//    },
-//
-//    {
-//    name: "node5",
-//    deps: []
-//    },
-//    
-//    {
-//    name: "node1",
-//    deps: ["node2", "node3"]
-//    }
-//
-//];
 },
 "Three.js": function(module, exports, require){
 /**
@@ -41929,6 +41863,333 @@ Detector = {
 	}
 
 };
+},
+"intuit_data.js": function(module, exports, require){
+module.exports = [
+	{
+		"name" : "Credit Card Processing",
+		"deps" : [],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Billing Manager",
+		"deps" : [],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Demandforce",
+		"deps" : ["GoPayment", "Address Verification"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "GoPayment",
+		"deps" : ["Credit Card Processing"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Intuit Eclipse",
+		"deps" : ["Credit Check"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Intuit Payroll",
+		"deps" : ["Credit Check", "Credit Card Processing", "Address Verification", "Billing Manager", "Intuit Eclipse"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Intuit Websites",
+		"deps" : ["Credit Check", "Billing Manager"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Mint.com",
+		"deps" : ["Credit Check"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Quickbooks",
+		"deps" : ["TurboTax_1", "TurboTax_2", "TurboTax_3", "Quicken"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Quicken",
+		"deps" : [],
+		"status": "Healthy"
+	},
+	{
+		"name" : "TurboTax_1",
+		"deps" : ["TurboTax_2", "TurboTax_3"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "TurboTax_2",
+		"deps" : ["TurboTax_3"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "TurboTax_3",
+		"deps" : [],
+		"status": "Healthy"
+	},
+	{
+		"name" : "IntuitMarket.com",
+		"deps" : ["Credit Card Processing", "Quicken"],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Address Verification",
+		"deps" : [],
+		"status": "Healthy"
+	},
+	{
+		"name" : "Credit Check",
+		"deps" : ["Credit Card Processing"],
+		"status": "Healthy"
+	}
+];
+
+//module.exports = [
+//    
+//    {
+//    name: "node4",
+//    deps: ["node5", "node2"]
+//    },
+//
+//    {
+//    name: "node2",
+//    deps: []
+//    },
+//
+//    {
+//    name: "node3",
+//    deps: ["node2", "node4", "node5"]
+//    },
+//
+//    {
+//    name: "node5",
+//    deps: []
+//    },
+//    
+//    {
+//    name: "node1",
+//    deps: ["node2", "node3"]
+//    }
+//
+//];
+},
+"google_data.js": function(module, exports, require){
+module.exports = [
+	{
+		"name": "Google AdSense",
+		"deps": ["Customer Service", "Lost Password"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Youtube",
+		"deps": ["Google AdSense", "Google AdWords", "Retirement", "Social Security", "Government Backdoor"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google AdWords",
+		"deps": ["Google AdSense", "Customer Service", "Lost Password"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Search USA",
+		"deps": ["Google Maps", "Google Shopping", "Youtube", "Retirement", "Social Security"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Search India",
+		"deps": ["Google Maps", "Google Shopping", "Youtube"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Search China",
+		"deps": ["Google Maps", "Google Shopping", "Youtube", "Legal Department"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Search London",
+		"deps": ["Google Maps", "Google Shopping", "Youtube"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Search Canada",
+		"deps": ["Google Maps", "Google Shopping", "Youtube"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Code Hosting",
+		"deps": ["Google AdWords", "Google AdSense"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Gmail Server Alpha",
+		"deps": ["Google News", "Google Weather", "Lost Password", "PIN Verification", "Government Backdoor"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Gmail Server Beta",
+		"deps": ["Google News", "Google Weather", "Lost Password", "PIN Verification", "Government Backdoor"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Gmail Server Delta",
+		"deps": ["Google News", "Google Weather", "Lost Password", "PIN Verification", "Government Backdoor"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Translate",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google News",
+		"deps": ["Google Maps", "Google Weather"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Fiber",
+		"deps": ["Google Wallet"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Weather",
+		"deps": ["Google Maps"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Android KitKat",
+		"deps": ["Android JellyBean", "Android IceCreamSandwich", "Android Gingerbread", "Android Honeycomb"],
+		"status": "Alert"
+	},
+	{
+		"name": "Android JellyBean",
+		"deps": ["Android IceCreamSandwich", "Android Gingerbread", "Android Honeycomb"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Android IceCreamSandwich",
+		"deps": ["Android Gingerbread", "Android Honeycomb"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Android Gingerbread",
+		"deps": ["Android Honeycomb"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Android Honeycomb",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Goggles",
+		"deps": ["Facial Recognition"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Wallet",
+		"deps": ["Gmail Server Alpha", "Gmail Server Beta", "Gmail Server Delta", "Human Resources", "Customer Service", "Credit Card Processing"],
+		"status": "Error"
+	},
+	{
+		"name": "Google Shopping",
+		"deps": ["Google Wallet", "Google AdSense", "Google AdWords", "Customer Service"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google+",
+		"deps": ["Gmail Server Alpha", "Gmail Server Beta", "Gmail Server Delta", "Google Search USA", "Google Search India", "Google Search China", "Google Search Canada"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Motorola Mobility 1",
+		"deps": ["Android Honeycomb", "Android Gingerbread", "Layoffs Department", "Human Resources"],
+		"status": "Error"
+	},
+	{
+		"name": "Motorola Mobility 2",
+		"deps": ["Android JellyBean", "Android IceCreamSandwich", "Layoffs Department", "Human Resources"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Maps",
+		"deps": ["Human Resources", "Legal Department"],
+		"status": "Alert"
+	},
+	{
+		"name": "Waze Social Traffic",
+		"deps": ["Google Maps", "Google+"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Google Glass",
+		"deps": ["Google Maps", "Credit Card Processing", "Facial Recognition"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Credit Card Processing",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Facial Recognition",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Government Backdoor",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "PIN Verification",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Lost Password",
+		"deps": ["Customer Service"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Customer Service",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Grievances",
+		"deps": ["Legal Department"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Legal Department",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Human Resources",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Social Security",
+		"deps": [],
+		"status": "Healthy"
+	},
+	{
+		"name": "Retirement",
+		"deps": ["Social Security"],
+		"status": "Healthy"
+	},
+	{
+		"name": "Layoffs Department",
+		"deps": [],
+		"status": "Healthy"
+	}
+];
 },
 "OrbitControls.js": function(module, exports, require){
 /**
