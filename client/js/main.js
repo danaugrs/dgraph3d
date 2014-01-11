@@ -310,7 +310,8 @@ function init() {
 	
 	// SKYBOX/FOG
 	var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
-	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+	//var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x444444, side: THREE.BackSide } );
 	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
 	scene.add(skyBox);
 	
@@ -334,8 +335,8 @@ function init() {
 	////////////
 
     lineMaterial = new THREE.LineBasicMaterial({
-        color: 0x0000ff,
-        opacity: 0
+        color: 0xffffff,
+        opacity: 0.8
     });
 
     //var geometry = new THREE.Geometry();
@@ -802,6 +803,7 @@ function onDocumentMouseMove( event ) {
                 scene.remove(line.particles.system);
                 //scene.remove(line.particles.system);
                 lines[i].particles = createParticleLine(line.childNode.object.position, line.parentNode.object.position);
+                lines[i].particles.system.material.size = 10;
 
             }
             scene.add(lines[i]);
@@ -876,6 +878,44 @@ function onDocumentMouseDown( event ) {
         //console.log(intersects[0]);
         SELECTED.material.opacity = 1;
         lastNode = SELECTED;
+
+        // Bold connecting lines
+        for (i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var parent = line.parentNode;
+            var child = line.childNode;
+
+            var name = line.name;
+            var particles = line.particles;
+            var material = lines[i].particles.system.material;
+
+            if (SELECTED.name == parent.object.name || SELECTED.name == child.object.name) {
+                //recreate particle system
+                console.log(parent.object.name, child.object.name, SELECTED.name, line);
+
+                
+                material.size = 10;
+                //material.color = 0x000044;
+                //var index = particleLines.indexOf(line.particles);
+                //if (index > -1) {
+                //    particleLines.splice(index, 1);
+                //}
+                //scene.remove(line.particles.system);
+                ////scene.remove(line.particles.system);
+                //lines[i].particles = createParticleLine(line.childNode.object.position, line.parentNode.object.position);
+
+            } else {
+                material.size = 5;
+                //material.color = 0xFFFFFF;
+                // UNBOLD
+
+
+            }
+
+        }
+
+
+
 
 	}
 
