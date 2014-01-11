@@ -25,6 +25,12 @@ var targetList = [];
 var nodeObjs = [];
 var lines = [];
 
+var increment = function() {
+    var i = 0;
+    return function() { return i += 1; };
+};
+var count = increment();
+
 exports.scene = scene;
 
 init();
@@ -43,12 +49,32 @@ var topBar = function() {
     };
     
     this.addChild = function() {
-        console.log("Adding child...");
+        if (nodeSelected) {
+            console.log("Adding child...");
+            var node = {
+                name: "Child"+count(),
+                status: "OK",
+                deps: [],
+                parents: [nodeSelected.node.name]
+            }
+            var text = node.name + "\n" + "Status: " + node.status;
+            var position = new THREE.Vector3(nodeSelected.position.x, nodeSelected.position.y - 30, nodeSelected.position.z);
+		    node.object = makeNode(text, { fontsize: 32, backgroundColor: bgColor(node.status), position: position , node: node } );
+            nodes.push(node);
+            nodeSelected.node.deps.push(node.name);
+            console.log(nodeSelected.node.name);
+            createLines([nodeSelected.node]);
+        }
     };
     
     this.sendError = function() {
         console.log("Sending error...");
         propagateStatus(nodeSelected.node, "ERROR");
+    };
+    
+    this.setOK = function() {
+        console.log("Sending error...");
+        propagateStatus(nodeSelected.node, "OK");
     };
     
     this.delete = function() {
@@ -69,6 +95,7 @@ gui.add(Gui, 'name').listen();
 gui.add(Gui, 'save');
 gui.add(Gui, 'addChild');
 gui.add(Gui, 'sendError');
+gui.add(Gui, 'setOK');
 gui.add(Gui, 'delete');
 
 function bgColor(status) {
@@ -108,6 +135,10 @@ function propagateStatus(node, status) {
         //        line.particles.system.material.needsUpdate = true;
         //    }
         //}
+    }
+    if (status == "OK") {
+        setParentStatus(node, "OK");
+
     }
 }
 
@@ -392,22 +423,24 @@ function createTree(data) {
 
 }
 
-function createLines(nodes) {
+function createLines(nodeList) {
+    console.log("Creating lines...");
     var i, j;
-    for (i = 0; i < nodes.length; i++) {
-        for (j = 0; j < nodes[i].deps.length; j++) {
-            var child = DepTree.getNode(nodes[i].deps[j], nodes);
+    for (i = 0; i < nodeList.length; i++) {
+        for (j = 0; j < nodeList[i].deps.length; j++) {
+            var child = DepTree.getNode(nodeList[i].deps[j], nodes);
+            console.log(nodeList[i].deps[j], child);
             var geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(nodes[i].position.x, nodes[i].position.y, nodes[i].position.z));
-            geometry.vertices.push(new THREE.Vector3(child.position.x, child.position.y, child.position.z));
+            geometry.vertices.push(new THREE.Vector3(nodeList[i].position.x, nodeList[i].position.y, nodeList[i].position.z));
+            geometry.vertices.push(new THREE.Vector3(child.object.position.x, child.object.position.y, child.object.position.z));
             geometry.dynamic = true;
             geometry.verticesNeedUpdate = true;
             var line = new THREE.Line(geometry, lineMaterial);
             line.name = "line" + i;
             console.log("Creating", line.name);//nodes[i], child);
-            line.parentNode = nodes[i];
+            line.parentNode = nodeList[i];
             line.childNode = child;
-            line.particles = createParticleLine(line.childNode.position, line.parentNode.position);
+            line.particles = createParticleLine(line.childNode.object.position, line.parentNode.object.position);
             scene.add(line);
             lines.push(line);
         }
@@ -427,7 +460,7 @@ function positionChildren(node, nodes, parentZ, levelHeight, coneRadius) {
             child.position = {};
             child.position.y = (parentZ - child.level + 1) * levelHeight;
             if (node.name == "Ghost Node") {
-                coneR = coneRadius*3;
+                coneR = coneRadius*7;
             } else {
                 coneR = coneRadius;
             }
