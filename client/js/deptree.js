@@ -1,33 +1,4 @@
 
-var nodes = [
-    
-    {
-    name: "node4",
-    deps: ["node5", "node2"]
-    },
-
-    {
-    name: "node2",
-    deps: []
-    },
-
-    {
-    name: "node3",
-    deps: ["node2", "node4", "node5"]
-    },
-
-    {
-    name: "node5",
-    deps: []
-    },
-    
-    {
-    name: "node1",
-    deps: ["node2", "node3"]
-    }
-
-]
-
 function map(nodes) {
     
     var p;
@@ -70,9 +41,9 @@ function getParentNode(nodes) {
 
 function getMaxLevel(pnodes) {
     var maxlevel = 0;
-    for (var i = 0; i < nodes.length; i++) {
-        if (nodes[i].level > maxlevel) {
-            maxlevel = nodes[i].level;
+    for (var i = 0; i < pnodes.length; i++) {
+        if (pnodes[i].level > maxlevel) {
+            maxlevel = pnodes[i].level;
         }
     }
     return maxlevel;
@@ -166,7 +137,6 @@ function printNodes(nodes) {
 //console.log(nodes);
 //printNodes(nodes);
 
-exports.example = nodes;
 exports.map = map;
 exports.getParentNode = getParentNode;
 exports.getNode = getNode;

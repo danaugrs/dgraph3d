@@ -5,8 +5,8 @@
  *
  */
 
-
 var DepTree = require("./deptree.js");
+var Data = require("./data.js");
 
 // standard global variables
 var nodes, data, container, lineMaterial, scene, camera, renderer, controls, stats;
@@ -25,9 +25,6 @@ animate();
 // FUNCTIONS 		
 function init() {
 	
-     
-
-
     // SCENE
 	scene = new THREE.Scene();
 
@@ -77,38 +74,15 @@ function init() {
 	// CUSTOM //
 	////////////
 
-    //var shape = new THREE.Shape();
-    //shape.moveTo(20,20);
-    //shape.bezierCurveTo(20, 100, 150, 100, 150, 20);
-    //shape.moveTo(20,20);
-    //shape.lineTo(20, 100);
-    //shape.lineTo(150, 100);
-    //shape.lineTo(150, 20);
-    //
-    //var shape3d = shape.extrude({});
-    //var shapePoints = shape.createPointsGeometry();
-    //var shapeSpacedPoints = shape.createSpacedPointsGeometry();
-    //var material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-    //var shapeMesh = new THREE.Mesh(shape3d, material);
-    //
-    //scene.add(shapeMesh);
-    
     lineMaterial = new THREE.LineBasicMaterial({
         color: 0x0000ff
     });
-    
-    data = DepTree.map(DepTree.example);
+   
+    // Process data
+    data = DepTree.map(Data);
 
+    // Create Graph
     createTree(data);
-
-    //var s = 50;
-    //var test = [
-    //    {name: "Center",
-    //        position: {x: 0, z: 0, y: 0}
-    //    }
-    //    ];
-
-    //createSprites(test);
 
 
 	var geometry = new THREE.SphereGeometry( 100, 4, 3 );
@@ -119,23 +93,12 @@ function init() {
 	mesh.position.set(0,0,0);
 	scene.add(mesh);
 	
-	//for (var i = 0; i < geometry.vertices.length; i++)
-	//{
-	//	//var spritey = makeTextSprite( " " + i + " ", { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-	//	var spritey = makeTextSprite( "Linux Ubuntu 12.4\nStatus: OK\nGreat", { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-	//	spritey.position = geometry.vertices[i].clone().multiplyScalar(1.1);
-	//	scene.add( spritey );
-    //}
-
-    // CREATE PATHS
-
 	
 }
 
 function createTree(data) {
 
     var i, p;
-
 
     p = DepTree.getParentNode(data.nodes);
 

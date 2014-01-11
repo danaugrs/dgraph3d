@@ -1,6 +1,36 @@
 (function(){function require(e,t,n){t||(t=0);var r=require.resolve(e,t),i=require.m[t][r];if(!i)throw new Error('failed to require "'+e+'" from '+n);if(i.c){t=i.c,r=i.m,i=require.m[t][i.m];if(!i)throw new Error('failed to require "'+r+'" from '+t)}return i.exports||(i.exports={},i.call(i.exports,i,i.exports,require.relative(r,t))),i.exports}require.resolve=function(e,t){var n=e,r=e+".js",i=e+"/index.js";return require.m[t][r]&&r?r:require.m[t][i]&&i?i:n},require.relative=function(e,t){return function(n){if("."!=n.charAt(0))return require(n,t,e);var r=e.split("/"),i=n.split("/");r.pop();for(var s=0;s<i.length;s++){var o=i[s];".."==o?r.pop():"."!=o&&r.push(o)}return require(r.join("/"),t,e)}};
 require.m = [];
 require.m[0] = {
+"data.js": function(module, exports, require){
+module.exports = [
+    
+    {
+    name: "node4",
+    deps: ["node5", "node2"]
+    },
+
+    {
+    name: "node2",
+    deps: []
+    },
+
+    {
+    name: "node3",
+    deps: ["node2", "node4", "node5"]
+    },
+
+    {
+    name: "node5",
+    deps: []
+    },
+    
+    {
+    name: "node1",
+    deps: ["node2", "node3"]
+    }
+
+];
+},
 "main.js": function(module, exports, require){
 /**
  * DGraph 0.0.1
@@ -9,8 +39,8 @@ require.m[0] = {
  *
  */
 
-
 var DepTree = require("./deptree.js");
+var Data = require("./data.js");
 
 // standard global variables
 var nodes, data, container, lineMaterial, scene, camera, renderer, controls, stats;
@@ -29,9 +59,6 @@ animate();
 // FUNCTIONS 		
 function init() {
 	
-     
-
-
     // SCENE
 	scene = new THREE.Scene();
 
@@ -81,38 +108,15 @@ function init() {
 	// CUSTOM //
 	////////////
 
-    //var shape = new THREE.Shape();
-    //shape.moveTo(20,20);
-    //shape.bezierCurveTo(20, 100, 150, 100, 150, 20);
-    //shape.moveTo(20,20);
-    //shape.lineTo(20, 100);
-    //shape.lineTo(150, 100);
-    //shape.lineTo(150, 20);
-    //
-    //var shape3d = shape.extrude({});
-    //var shapePoints = shape.createPointsGeometry();
-    //var shapeSpacedPoints = shape.createSpacedPointsGeometry();
-    //var material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-    //var shapeMesh = new THREE.Mesh(shape3d, material);
-    //
-    //scene.add(shapeMesh);
-    
     lineMaterial = new THREE.LineBasicMaterial({
         color: 0x0000ff
     });
-    
-    data = DepTree.map(DepTree.example);
+   
+    // Process data
+    data = DepTree.map(Data);
 
+    // Create Graph
     createTree(data);
-
-    //var s = 50;
-    //var test = [
-    //    {name: "Center",
-    //        position: {x: 0, z: 0, y: 0}
-    //    }
-    //    ];
-
-    //createSprites(test);
 
 
 	var geometry = new THREE.SphereGeometry( 100, 4, 3 );
@@ -123,23 +127,12 @@ function init() {
 	mesh.position.set(0,0,0);
 	scene.add(mesh);
 	
-	//for (var i = 0; i < geometry.vertices.length; i++)
-	//{
-	//	//var spritey = makeTextSprite( " " + i + " ", { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-	//	var spritey = makeTextSprite( "Linux Ubuntu 12.4\nStatus: OK\nGreat", { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-	//	spritey.position = geometry.vertices[i].clone().multiplyScalar(1.1);
-	//	scene.add( spritey );
-    //}
-
-    // CREATE PATHS
-
 	
 }
 
 function createTree(data) {
 
     var i, p;
-
 
     p = DepTree.getParentNode(data.nodes);
 
@@ -37335,35 +37328,6 @@ THREE.ShaderSprite = {
 },
 "deptree.js": function(module, exports, require){
 
-var nodes = [
-    
-    {
-    name: "node4",
-    deps: ["node5", "node2"]
-    },
-
-    {
-    name: "node2",
-    deps: []
-    },
-
-    {
-    name: "node3",
-    deps: ["node2", "node4", "node5"]
-    },
-
-    {
-    name: "node5",
-    deps: []
-    },
-    
-    {
-    name: "node1",
-    deps: ["node2", "node3"]
-    }
-
-]
-
 function map(nodes) {
     
     var p;
@@ -37406,9 +37370,9 @@ function getParentNode(nodes) {
 
 function getMaxLevel(pnodes) {
     var maxlevel = 0;
-    for (var i = 0; i < nodes.length; i++) {
-        if (nodes[i].level > maxlevel) {
-            maxlevel = nodes[i].level;
+    for (var i = 0; i < pnodes.length; i++) {
+        if (pnodes[i].level > maxlevel) {
+            maxlevel = pnodes[i].level;
         }
     }
     return maxlevel;
@@ -37502,7 +37466,6 @@ function printNodes(nodes) {
 //console.log(nodes);
 //printNodes(nodes);
 
-exports.example = nodes;
 exports.map = map;
 exports.getParentNode = getParentNode;
 exports.getNode = getNode;
