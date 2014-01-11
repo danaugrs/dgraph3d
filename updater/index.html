@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>UI for Data Visualization</title>
+	<title>Data Processing Center</title>
 
 	<style type = "text/css">
 	#refresh {
@@ -65,7 +65,8 @@
 		border:1px solid #ecf0f1;
 	}
 	.Healthy {
-		background-color: green;
+		height:100px;
+		background:url("good.jpg") no-repeat left left fixed;
 	}
 	.Error {
 		background-color: red;
@@ -95,7 +96,7 @@
 			submain.setAttribute('style','background-color:'+colorsOfTheRainbow[i % 6]);
 			
 			var nameCol = document.createElement("div");
-			nameCol.innerHTML += data[i].name + "<br>Status: " + data[i].status + "<br>";
+			nameCol.innerHTML += data[i].name;
 			nameCol.setAttribute("class", data[i].status);
 
 			var buttonCol = document.createElement("div");
