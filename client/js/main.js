@@ -13,7 +13,7 @@ var data, container, lineMaterial, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
 var lastNode, nodeSelected, SELECTED, offset, plane;
-var testline;
+var testline, particleLines = [];
 
 // custom global variables
 var cube;
@@ -38,8 +38,11 @@ var topBar = function() {
         console.log("Saving changes...");
         console.log(SELECTED);
         nodeSelected.name = this.name;
-        var tex = makeMsgTexture( this.name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-        nodeSelected.material.map = tex;
+        var msgtex = makeMsgTexture( this.name, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
+        nodeSelected.material.map = msgtex.texture;
+        nodeSelected.material.map.needsUpdate = true;// = tex;
+        nodeSelected.scale.x = msgtex.canvas.width * 0.3;
+        nodeSelected.scale.y = msgtex.canvas.height * 0.3;
     };
     
     this.addChild = function() {
@@ -154,8 +157,6 @@ function init() {
     testline = new THREE.Line(geometry, lineMaterial);
     scene.add(testline);
 
-    scene.remove(testline);
-
 
     offset = new THREE.Vector3();
    
@@ -165,7 +166,6 @@ function init() {
     // Create Graph
     createTree(data);
 
-
 	var geometry = new THREE.SphereGeometry( 100, 4, 3 );
 	geometry.mergeVertices();
 	geometry.computeCentroids();
@@ -173,8 +173,118 @@ function init() {
 	mesh = new THREE.Mesh( geometry, material );
 	mesh.position.set(0,0,0);
 	scene.add(mesh);
+
+    setUpParticles();
 	
 	
+}
+
+function setUpParticles() {
+    // create the particle variables
+        particles = new THREE.Geometry(),
+        pMaterial = new THREE.ParticleBasicMaterial({
+            color: 0xFFFFFF,
+            size: 5,
+            map: THREE.ImageUtils.loadTexture(
+              "images/particle.png"
+            ),
+            blending: THREE.AdditiveBlending,
+            transparent: true
+        });
+    
+    var origin = testline.geometry.vertices[0];
+    var dest = testline.geometry.vertices[1];
+
+    var vector = dest.clone().sub(origin.clone());
+    
+    console.log(vector.length());
+    var particleCount = Math.floor(vector.length()/2);
+
+    // now create the individual particles
+    for (var p = 0; p < particleCount; p++) {
+
+        var pX = origin.x + vector.x * p / particleCount;
+        var pY = origin.y + vector.y * p / particleCount;
+        var pZ = origin.z + vector.z * p / particleCount;
+        var particle = new THREE.Vertex(
+            new THREE.Vector3(pX, pY, pZ)
+          );
+    
+      // add it to the geometry
+      particles.vertices.push(particle);
+    }
+
+    particles.verticesNeedUpdate = true;
+    particles.elementsNeedUpdate = true;
+    particles.morphTargetsNeedUpdate = true;
+    particles.uvsNeedUpdate = true;
+    particles.normalsNeedUpdate = true;
+    particles.colorsNeedUpdate = true;
+    particles.tangentsNeedUpdate = true;
+    
+    // create the particle system
+    var particleSystem = new THREE.ParticleSystem(
+        particles,
+        pMaterial);
+    
+    // add it to the scene
+    
+    particles._vector = vector;
+    particles.count = particleCount;
+
+    particleSystem.geometry.__dirtyVertices = true;
+    scene.add(particleSystem);
+    particleLines.push(particles);
+
+
+//    var discTexture = THREE.ImageUtils.loadTexture( 'images/particle.png' );
+//	
+//	// properties that may vary from particle to particle. 
+//	// these values can only be accessed in vertex shaders! 
+//	//  (pass info to fragment shader via vColor.)
+//	this.attributes = 
+//	{
+//		customColor:	 { type: 'c',  value: [] },
+//		customOffset:	 { type: 'f',  value: [] },
+//	};
+//	
+//	var particleCount = 10;
+//	for( var v = 0; v < particleCount; v++ ) 
+//	{
+//		attributes.customColor.value[ v ] = new THREE.Color().setHSL( 1 - v / particleCount, 1.0, 0.5 );
+//		attributes.customOffset.value[ v ] = 6.282 * (v / particleCount); // not really used in shaders, move elsewhere
+//	}
+//	
+//	// values that are constant for all particles during a draw call
+//	this.uniforms = 
+//	{
+//		time:      { type: "f", value: 1.0 },
+//		texture:   { type: "t", value: discTexture },
+//	};
+//
+//	var shaderMaterial = new THREE.ShaderMaterial( 
+//	{
+//		uniforms: 		uniforms,
+//		attributes:     attributes,
+//		vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+//		fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+//		transparent: true, // alphaTest: 0.5,  // if having transparency issues, try including: alphaTest: 0.5, 
+//		// blending: THREE.AdditiveBlending, depthTest: false,
+//		// I guess you don't need to do a depth test if you are alpha blending
+//		// 
+//	});
+//
+//	var particleCube = new THREE.ParticleSystem( testline, shaderMaterial );
+//	particleCube.position.set(0, 85, 0);
+//	particleCube.dynamic = true;
+//	// in order for transparency to work correctly, we need sortParticles = true.
+//	//  but this won't work if we calculate positions in vertex shader,
+//	//  so positions need to be calculated in the update function,
+//	//  and set in the geometry.vertices array
+//	particleCube.sortParticles = true;
+//	scene.add( particleCube );
+
+
 }
 
 function createTree(data) {
@@ -266,10 +376,11 @@ function makeNode( message, parameters) {
 
     var scale = 0.3;
     
-    var geometry = new THREE.CubeGeometry( canvas.width*scale, canvas.height*scale, 2 );
+    var geometry = new THREE.CubeGeometry( 1, 1, 1); //canvas.width*scale, canvas.height*scale, 2 );
 
 	//var texture = THREE.ImageUtils.loadTexture( 'textures/crate.gif' );
-	texture.anisotropy = renderer.getMaxAnisotropy();
+	//texture.anisotropy = renderer.getMaxAnisotropy();
+    texture.needsUpdate = true;
 
 	var material = new THREE.MeshBasicMaterial({
         map: texture,
@@ -281,6 +392,11 @@ function makeNode( message, parameters) {
 	mesh = new THREE.Mesh( geometry, material );
     mesh.position = parameters.position;
     mesh.name = message;
+
+    mesh.scale.x = canvas.width * scale;
+    mesh.scale.y = canvas.height * scale;
+    mesh.scale.z = 1;//canvas.width * scale;
+
 	scene.add(mesh);
     nodeObjs.push(mesh);
     return mesh;
@@ -559,7 +675,7 @@ function onDocumentMouseUp( event ) {
 
 function update() {
 
-    var i;
+    var i, j, k;
 
 	controls.update();
 	stats.update();
@@ -592,6 +708,25 @@ function update() {
         lines[i].name = name;
         scene.add(line);
         
+    }
+
+    for (i = 0; i < particleLines.length; i++) {
+        var particles = particleLines[i];
+        for (j = 0; j < particles.vertices.length; j++) {
+            var particle = particles.vertices[j];
+            var s = 1;
+            
+            //var v = new THREE.Vector3(0,10,0);
+
+            //v.x = particle.x + particles._vector.x * s;
+            //v.y = particle.y + particles._vector.y * s;
+            //v.z = particle.z + particles._vector.z * s;
+           
+            //console.log(v);
+            particles.vertices[j].x += 1;
+            
+        
+        }
     }
 
     //for (i = 0; i < nodes.length; i++) {
