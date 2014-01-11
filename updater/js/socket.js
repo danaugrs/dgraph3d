@@ -124,7 +124,8 @@ wsServer.on('request', function(request) {
 		}
 		// conn.sendUTF(message);
 	})
-	conn.sendUTF(data);
+	// log(JSON.stringify(data));
+	conn.send(JSON.stringify(data));
 })
 
 // function main() {

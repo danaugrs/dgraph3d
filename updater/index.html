@@ -16,7 +16,7 @@
 		// modify data to point to incoming JSON file
 		// console.log('adsf');
 		// $.getJSON('data.json', function(data) {
-			populateData(data);
+			populateData(JSON.parse(data));
 			addButtonFx();
 		// });
 	}
@@ -28,7 +28,7 @@
 	function populateData(data) {
 		console.log(data);
 		for (var i = 0; i < data.length; i++) {
-			// console.log(data[i]);
+			console.log(data[i]);
 			var main = document.getElementById("nodes");
 			main.innerHTML += "<br>" + data[i].name;
 
@@ -98,7 +98,7 @@
 	});
 
 	socket.addEventListener("message", function(event) {
-		console.log("WebSocket data incoming:" + JSON.parse(event.data));
+		console.log("WebSocket data incoming:" + event.data);
 		initialize(event.data);
 	});	
 
