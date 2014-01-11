@@ -7,12 +7,10 @@
 	</style>
 
 	<script src = "js/jquery-1.10.2.min.js"></script>
-	<script src = "js/socket.js"></script>
 
 	<script type = "text/javascript">
-	function initialize() {
-		// modify data to point to incoming JSON file
-		data = [
+
+	data = [
 	{
 		"name" : "Credit Card Processing",
 		"dependency" : [],
@@ -95,10 +93,13 @@
 	}
 ];
 
+	function initialize() {
+		// modify data to point to incoming JSON file
 		// console.log('adsf');
 		// $.getJSON('data.json', function(data) {
 			populateData(data);
 			addButtonFx();
+			startWebSocket();
 		// });
 	}
 
@@ -143,16 +144,6 @@
 		}
 	}
 
-	function test() {
-		console.log("click");
-
-	}
-
-	function addNodeName(name, dep) {
-		console.log(name, dep);
-
-	}
-
 	function addButtonFx() {
 		var allOK = document.getElementsByName("OK");
 		for (var i = 0; i < allOK.length; i++) {
@@ -175,6 +166,28 @@
 			}
 		}
 	}
+
+	function startWebSocket() {
+	socket = new WebSocket("localhost:7777", "echo-protocol");
+
+	socket.addEventListener("open", function(event) {
+		console.log("WebSocket connected.");
+	});
+
+	socket.addEventListener("message", function(event) {
+		console.log("WebSocket data incoming:" + event.data);
+		// initialize(event.data);
+	});	
+
+	socket.addEventListener("error", function(event) {
+        console.log("Websocket error.");
+    });
+
+    socket.addEventListener("close", function(event) {
+        console.log("Websocket connection closed.");
+    });
+
+}
 	</script>
 </head>
 <body>
