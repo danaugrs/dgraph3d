@@ -12,7 +12,8 @@ var Data = require("./data.js");
 var data, container, lineMaterial, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
-var lastNode, selectedNode;
+var lastNode, SELECTED, offset, plane;
+var testline;
 
 // custom global variables
 var cube;
@@ -20,7 +21,10 @@ var projector, mouse = { x: 0, y: 0 }, INTERSECTED;
 var sprite1;
 var canvas1, context1, texture1;
 var targetList = [];
-var nodes = [];
+var nodeObjs = [];
+var lines = [];
+
+exports.scene = scene;
 
 init();
 render();
@@ -32,7 +36,7 @@ function init() {
 
     // SCENE
 	scene = new THREE.Scene();
-
+    exports.scene = scene;
 	// CAMERA
 	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
 	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
@@ -79,9 +83,19 @@ function init() {
     // initialize object to perform world/screen calculations
 	projector = new THREE.Projector();
 	
+    plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } ) );
+    plane.visible = false;
+	scene.add( plane );
 	// when the mouse moves, call the given function
-	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 	
+    renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+
+	//
+
+	//window.addEventListener( 'resize', onWindowResize, false );
+    
     ////////////
 	// CUSTOM //
 	////////////
@@ -90,7 +104,24 @@ function init() {
         color: 0x0000ff
     });
 
-    makeNode("HELLO!", {position:{x: 0, y: 0, z: 0}});
+    var geometry = new THREE.Geometry();
+    geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+    geometry.vertices.push(new THREE.Vector3(10, 10, 10));
+    geometry.dynamic = true;
+    geometry.verticesNeedUpdate = true;
+    geometry.elementsNeedUpdate = true;
+    geometry.morphTargetsNeedUpdate = true;
+    geometry.uvsNeedUpdate = true;
+    geometry.normalsNeedUpdate = true;
+    geometry.colorsNeedUpdate = true;
+    geometry.tangentsNeedUpdate = true;
+    testline = new THREE.Line(geometry, lineMaterial);
+    scene.add(testline);
+
+    scene.remove(testline);
+
+
+    offset = new THREE.Vector3();
    
     // Process data
     data = DepTree.map(Data);
@@ -119,15 +150,18 @@ function createTree(data) {
     var levelHeight = 40;
     var coneRadius = 10;
     var parentZ = data.maxlevel/2;
+    var nodes = data.nodes;
 
     p.position.y = parentZ * levelHeight;
     p.position.x = 0;
     p.position.z = 0;
 
-    positionChildren(p, data.nodes, parentZ, levelHeight, coneRadius);
+    positionChildren(p, nodes, parentZ, levelHeight, coneRadius);
 
-    createNodes(data.nodes);
-    createLines(data.nodes);
+    var nodes = createNodes(nodes);
+    console.log(scene);
+    console.log(nodes);
+    createLines(nodes);
 
 }
 
@@ -139,8 +173,15 @@ function createLines(nodes) {
             var geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3(nodes[i].position.x, nodes[i].position.y, nodes[i].position.z));
             geometry.vertices.push(new THREE.Vector3(child.position.x, child.position.y, child.position.z));
+            geometry.dynamic = true;
+            geometry.verticesNeedUpdate = true;
             var line = new THREE.Line(geometry, lineMaterial);
+            console.log(nodes[i], child);
+            line.name = "line" + i;
+            line.parentNode = nodes[i];
+            line.childNode = child;
             scene.add(line);
+            lines.push(line);
         }
 
     }
@@ -179,6 +220,8 @@ function createNodes(data) {
         //targetList.push(data[i].sprite);
     }
 
+    return data;
+
 }
 
 function makeNode( message, parameters) {
@@ -204,7 +247,8 @@ function makeNode( message, parameters) {
 	mesh = new THREE.Mesh( geometry, material );
     mesh.position = parameters.position;
 	scene.add(mesh);
-    nodes.push(mesh);
+    nodeObjs.push(mesh);
+    return mesh;
 
 }
 
@@ -321,48 +365,157 @@ function roundRect(ctx, x, y, w, h, r)
 	ctx.stroke();   
 }
 
-function onDocumentMouseDown( event ) {
-	// the following line would stop any other event handler from firing
-	// (such as the mouse's TrackballControls)
+//function onDocumentMouseDown( event ) {
+//	// the following line would stop any other event handler from firing
+//	// (such as the mouse's TrackballControls)
+//	event.preventDefault();
+//	
+//	console.log("Click.");
+//	
+//	// update the mouse variable
+//	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+//	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+//	
+//	// find intersections
+//
+//	// create a Ray with origin at the mouse position
+//	//   and direction into the scene (camera direction)
+//	var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+//	projector.unprojectVector( vector, camera );
+//	var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+//
+//	// create an array containing all objects in the scene with which the ray intersects
+//	var intersects = ray.intersectObjects( nodes );
+//	
+//	// if there is one (or more) intersections
+//	if ( intersects.length > 0 ) {
+//        if (lastNode) {
+//            lastNode.material.opacity = 0.7;
+//        }
+//        selectedNode = intersects[0].object;		
+//        //console.log("Hit @ " + toString( intersects[0].point ) );
+//        //console.log(intersects[0]);
+//        selectedNode.material.opacity = 1;
+//        lastNode = selectedNode;
+//
+//
+//
+//		
+//        // change the color of the closest face.
+//		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
+//		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
+//	}
+//
+//}
+
+function onDocumentMouseMove( event ) {
+
 	event.preventDefault();
-	
-	console.log("Click.");
-	
-	// update the mouse variable
+
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-	
-	// find intersections
 
-	// create a Ray with origin at the mouse position
-	//   and direction into the scene (camera direction)
-	var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+	//
+
+	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
 	projector.unprojectVector( vector, camera );
-	var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
 
-	// create an array containing all objects in the scene with which the ray intersects
-	var intersects = ray.intersectObjects( nodes );
-	
-	// if there is one (or more) intersections
+	var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+
+	if ( SELECTED ) {
+
+		var intersects = raycaster.intersectObject( plane );
+        console.log(SELECTED);
+		SELECTED.position = intersects[ 0 ].point.sub( offset ) ;
+		return;
+
+	}
+
+
+	var intersects = raycaster.intersectObjects( nodeObjs );
+
 	if ( intersects.length > 0 ) {
-        if (lastNode) {
-            lastNode.material.opacity = 0.7;
-        }
-        selectedNode = intersects[0].object;		
-        //console.log("Hit @ " + toString( intersects[0].point ) );
-        //console.log(intersects[0]);
-        selectedNode.material.opacity = 1;
-        lastNode = selectedNode;
 
+		if ( INTERSECTED != intersects[ 0 ].object ) {
 
+			if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
 
-		
-        // change the color of the closest face.
-		//intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
-		//intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
+			INTERSECTED = intersects[ 0 ].object;
+			INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+
+			plane.position.copy( INTERSECTED.position );
+			plane.lookAt( camera.position );
+
+		}
+
+		container.style.cursor = 'pointer';
+
+	} else {
+
+		if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+		INTERSECTED = null;
+
+		container.style.cursor = 'auto';
+
 	}
 
 }
+
+function onDocumentMouseDown( event ) {
+
+	event.preventDefault();
+
+	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
+	projector.unprojectVector( vector, camera );
+
+	var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+	var intersects = raycaster.intersectObjects( nodeObjs );
+
+	if ( intersects.length > 0 ) {
+
+		controls.enabled = false;
+        
+        if (lastNode) {
+            lastNode.material.opacity = 0.7;
+        }
+
+		SELECTED = intersects[ 0 ].object;
+
+		var intersects = raycaster.intersectObject( plane );
+		offset.copy( intersects[ 0 ].point ).sub( plane.position );
+
+		container.style.cursor = 'move';
+        
+        //console.log("Hit @ " + toString( intersects[0].point ) );
+        //console.log(intersects[0]);
+        SELECTED.material.opacity = 1;
+        lastNode = SELECTED;
+
+	}
+
+}
+
+function onDocumentMouseUp( event ) {
+
+	event.preventDefault();
+
+	controls.enabled = true;
+
+	if ( INTERSECTED ) {
+
+		plane.position.copy( INTERSECTED.position );
+
+		SELECTED = null;
+
+	}
+
+	container.style.cursor = 'auto';
+
+}
+
 
 // Loops
 
@@ -373,16 +526,53 @@ function update() {
 	controls.update();
 	stats.update();
 
-    for (i = 0; i < nodes.length; i++) {
+    // Update lines
+    //
+    //console.log(lines[0].parentNode.object.position);
+    
+    
+    //var x = testline.geometry.vertices[0].x;
+
+    //console.log(testline.geometry.vertices[0].x);
+
+    for (i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var parent = line.parentNode;
+        var child = line.childNode;
+        var name = line.name;
+        
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(line.parentNode.object.position);
+        geometry.vertices.push(line.childNode.object.position);
+        
+        var l = scene.getObjectByName(lines[i].name);
+        console.log(lines[i].name);
+        scene.remove(l);
+        //line.geometry.dispose();
+	    //line.material.dispose();
+        //	texture.dispose();
+        //renderer.deallocateObject(testline);
+        
+        lines[i] = new THREE.Line(geometry, lineMaterial);
+        lines[i].parentNode = parent;
+        lines[i].childNode = child;
+        lines[i].name = name;
+        scene.add(line);
+        
+        //line.geometry.vertices[0].y += 1;//line.parentNode.object.position;
+        //line.geometry.vertices[1] = line.childNode.object.position;
+    }
+
+    //for (i = 0; i < nodes.length; i++) {
         //console.log(nodes[i]);
         //console.log(camera.rotation.y, nodes[i].rotation.y);
-        var vector = new THREE.Vector3(camera.position.x - nodes[i].position.x, 0, camera.position.y-nodes[i].position.z);
+        //var vector = new THREE.Vector3(camera.position.x - nodes[i].position.x, 0, camera.position.y-nodes[i].position.z);
         //nodes[i].lookAt(camera.position);//rotation.y = camera.rotation.y;
         //nodes[i].lookAt(vector);//rotation.y = camera.rotation.y;
         //var a = controls.getAutoRotationAngle();
         //console.log(controls);
         //nodes[i].rotation.y = camera.rotation.y;
-    }
+    //}
 
 }
 
