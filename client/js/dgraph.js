@@ -23,6 +23,7 @@ var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
 var lastNode, nodeSelected, SELECTED, offset, plane;
 var testline, particleLines = [];
+var nodes;
 
 // custom global variables
 var cube;
@@ -45,18 +46,18 @@ var topBar = function() {
     
     this.save = function() {
         console.log("Saving changes...");
-        console.log(SELECTED);
-        nodeSelected.name = this.name;
-        var text = this.name + "\n" + "Status: " + nodeSelected.node.status;
-        var msgtex = makeMsgTexture( text, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1} } );
-        nodeSelected.material.map = msgtex.texture;
-        nodeSelected.material.map.needsUpdate = true;// = tex;
-        nodeSelected.scale.x = msgtex.canvas.width * 0.3;
-        nodeSelected.scale.y = msgtex.canvas.height * 0.3;
+        console.log(nodeSelected.node);
+        nodeSelected.node.name = this.name;
+        updateNode(nodeSelected.node);
     };
     
     this.addChild = function() {
         console.log("Adding child...");
+    };
+    
+    this.sendError = function() {
+        console.log("Sending error...");
+        propagateStatus(nodeSelected.node, "ERROR");
     };
     
     this.delete = function() {
@@ -76,11 +77,78 @@ gui.add(Gui, 'name').listen();
 //gui.add(text, 'displayOutline');
 gui.add(Gui, 'save');
 gui.add(Gui, 'addChild');
+gui.add(Gui, 'sendError');
 gui.add(Gui, 'delete');
+
+function bgColor(status) {
+    if (status == "OK") {
+        // Green
+        backgroundColor= {r:100, g:200, b:100, a:1};
+    }
+    if (status == "ERROR") {
+        // Green
+        backgroundColor= {r:200, g:100, b:100, a:1};
+    }
+    if (status == "ALERT") {
+        // Green
+        backgroundColor= {r:200, g:200, b:100, a:1};
+    }
+    return backgroundColor;
+
+}
+
+function propagateStatus(node, status) {
+    node.status = status;
+    updateNode(node);
+    if (status == "ERROR") {
+        setParentStatus(node, "ALERT");
+        
+        // TODO CHANGE PARTICLE COLORS
+        //var i;
+        //for (i = 0; i < lines.length; i++) {
+        //    var line = lines[i];
+        //    var parent = line.parentNode;
+        //    var child = line.childNode;
+        //    if (node.name == child.object.name) {
+        //        console.log(child.object.name, line.particles);
+        //        line.particles.system.material.color.r = 200;
+        //        line.particles.system.material.color.g = 100;
+        //        line.particles.system.material.color.b = 100;
+        //        line.particles.system.material.needsUpdate = true;
+        //    }
+        //}
+    }
+}
+
+function setParentStatus(node, status) {
+
+    var i;
+    console.log(node.parents);
+    for (i = 0; i < node.parents.length; i++) {
+        var n = DepTree.getNode(node.parents[i], nodes);
+        if (n.status == "ERROR" && status == "ALERT") {
+            continue
+        }
+        n.status = status;
+        updateNode(n);
+        setParentStatus(n, status);
+    }
+
+}
+
+function updateNode(node) {
+    var text = node.name + "\n" + "Status: " + node.status;
+    var msgtex = makeMsgTexture( text, { fontsize: 32, backgroundColor: bgColor(node.status) } );
+    node.object.material.map = msgtex.texture;
+    node.object.material.map.needsUpdate = true;// = tex;
+    node.object.scale.x = msgtex.canvas.width * 0.3;
+    node.object.scale.y = msgtex.canvas.height * 0.3;
+}
 
 
 // FUNCTIONS 		
 function init() {
+
 
     console.log("Initializing...");
 
@@ -308,7 +376,7 @@ function createTree(data) {
     var levelHeight = 40;
     var coneRadius = 30;
     var parentZ = data.maxlevel/2;
-    var nodes = data.nodes;
+    nodes = data.nodes;
 
     p.position.y = parentZ * levelHeight;
     p.position.x = 0;
@@ -316,7 +384,7 @@ function createTree(data) {
 
     positionChildren(p, nodes, parentZ, levelHeight, coneRadius);
 
-    var nodes = createNodes(nodes);
+    nodes = createNodes(nodes);
     //console.log(scene);
     //console.log(nodes);
     createLines(nodes);
@@ -326,6 +394,10 @@ function createTree(data) {
         var l = scene.getObjectByName(p.name);
         deleteNode(l);
     }
+    setTimeout(function() {
+        console.log("PROPAGATING");
+        propagateStatus(DepTree.getNode("Quicken", nodes), "ERROR");
+    }, 2000);
 
 }
 
@@ -386,7 +458,7 @@ function createNodes(data) {
     for (i = 0; i < data.length; i++) {
         console.log(data[i]);
         var text = data[i].name + "\n" + "Status: " + data[i].status;
-		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: {r:255, g:100, b:100, a:1}, position: data[i].position , node: data[i]} );
+		data[i].object = makeNode(text, { fontsize: 32, backgroundColor: bgColor(data[i].status), position: data[i].position , node: data[i]} );
 		//data[i].sprite.position = data[i].position;//geometry.vertices[i].clone().multiplyScalar(1.1);
 		//scene.add( data[i].sprite );
         //targetList.push(data[i].sprite);
