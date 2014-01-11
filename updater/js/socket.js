@@ -118,17 +118,10 @@ wsServer.on('request', function(request) {
 	conn.on('message', function(message) {
 		if (message.type === 'utf8') {
 			log("Received Message: " + message.utf8Data);
-
 			changedata(message.utf8Data);
-
 			conn.send(JSON.stringify(data));
 		}
-		else if (message.type === 'binary') {
-			log("Received Message: " + message.binaryData)
-		}
-		// conn.sendUTF(message);
 	})
-	// log(JSON.stringify(data));
 	conn.send(JSON.stringify(data));
 })
 
